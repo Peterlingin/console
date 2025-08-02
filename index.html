@@ -1,3 +1,260 @@
-<html>
-<h1>Hello!<h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DARKNET_TERMINAL v2.3.7</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono:wght@400&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000;
+            color: #00ff00;
+            font-family: 'Share Tech Mono', monospace;
+            line-height: 1.4;
+            overflow-x: hidden;
+        }
+        
+        .terminal {
+            min-height: 100vh;
+            padding: 20px;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(0, 255, 0, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(0, 255, 0, 0.05) 0%, transparent 50%);
+            position: relative;
+        }
+        
+        .terminal::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 255, 0, 0.03) 2px,
+                    rgba(0, 255, 0, 0.03) 4px
+                );
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .content {
+            position: relative;
+            z-index: 2;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            border: 2px solid #00ff00;
+            padding: 15px;
+            margin-bottom: 30px;
+            background: rgba(0, 0, 0, 0.8);
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+        }
+        
+        .title {
+            font-size: 24px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px #00ff00;
+        }
+        
+        .subtitle {
+            font-size: 12px;
+            color: #00dd00;
+            opacity: 0.8;
+        }
+        
+        .prompt {
+            color: #00ff00;
+            margin: 20px 0 10px 0;
+        }
+        
+        .nav-section {
+            background: rgba(0, 20, 0, 0.6);
+            border: 1px solid #00ff00;
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .nav-section::before {
+            content: '█';
+            position: absolute;
+            top: -1px;
+            left: -1px;
+            color: #00ff00;
+            background: #000;
+            padding: 0 5px;
+        }
+        
+        .section-title {
+            color: #00ffff;
+            margin-bottom: 15px;
+            font-size: 16px;
+            text-transform: uppercase;
+        }
+        
+        .link-list {
+            list-style: none;
+            padding-left: 20px;
+        }
+        
+        .link-list li {
+            margin-bottom: 8px;
+            position: relative;
+        }
+        
+        .link-list li::before {
+            content: '> ';
+            color: #00ff00;
+            position: absolute;
+            left: -15px;
+        }
+        
+        .link-list a {
+            color: #00dd00;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .link-list a:hover {
+            color: #00ffff;
+            text-shadow: 0 0 5px #00ffff;
+        }
+        
+        .link-list a:hover::after {
+            content: ' [ACCESSING...]';
+            color: #ffff00;
+            font-size: 10px;
+            animation: blink 1s infinite;
+        }
+        
+        .status-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.9);
+            border-top: 1px solid #00ff00;
+            padding: 10px 20px;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            z-index: 3;
+        }
+        
+        .cursor {
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        .ascii-art {
+            font-size: 10px;
+            line-height: 1;
+            color: #004400;
+            text-align: center;
+            margin: 20px 0;
+            white-space: pre;
+        }
+        
+        @media (max-width: 600px) {
+            .terminal {
+                padding: 10px;
+            }
+            .title {
+                font-size: 18px;
+            }
+            .ascii-art {
+                font-size: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal">
+        <div class="content">
+            <div class="header">
+                <div class="title">DARKNET_TERMINAL v2.3.7</div>
+                <div class="subtitle">UNAUTHORIZED ACCESS DETECTED - SECURITY LEVEL: OMEGA</div>
+            </div>
+            
+            <div class="ascii-art">
+    ██████╗  █████╗ ██████╗ ██╗  ██╗███╗   ██╗███████╗████████╗
+    ██╔══██╗██╔══██╗██╔══██╗██║ ██╔╝████╗  ██║██╔════╝╚══██╔══╝
+    ██║  ██║███████║██████╔╝█████╔╝ ██╔██╗ ██║█████╗     ██║   
+    ██║  ██║██╔══██║██╔══██╗██╔═██╗ ██║╚██╗██║██╔══╝     ██║   
+    ██████╔╝██║  ██║██║  ██║██║  ██╗██║ ╚████║███████╗   ██║   
+    ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝   ╚═╝   
+            </div>
+            
+            <div class="prompt">root@darknet:~$ ls -la /hidden/archives/</div>
+            
+            <div class="nav-section">
+                <div class="section-title">[CLASSIFIED_DOCUMENTS]</div>
+                <ul class="link-list">
+                    <li><a href="threat_map_v1.html">Threat Map</a></li>
+                    <li><a href="soc_console_v1.html">SOC Console</a></li>
+                    <li><a href="hacker_terminal.html">Hacker Terminal</a></li>
+                    <li><a href="voight_kampff_machine_v2.html">Voight-Kampff Machine</a></li>
+                </ul>
+            </div>
+            
+            <div class="prompt">root@darknet:~$ cat /proc/sys_status<span class="cursor">█</span></div>
+        </div>
+        
+        <div class="status-bar">
+            <span>CONNECTION: ENCRYPTED | IP: 127.0.0.1 | PORT: 31337</span>
+            <span>UPTIME: 1337d 7h 42m | MEM: 87% | CPU: 23%</span>
+        </div>
+    </div>
+    
+    <script>
+        // Add some dynamic terminal effects
+        document.addEventListener('DOMContentLoaded', function() {
+            const links = document.querySelectorAll('a');
+            
+            links.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const originalText = this.textContent;
+                    this.textContent = '[FILE_NOT_FOUND]';
+                    this.style.color = '#ff0000';
+                    
+                    setTimeout(() => {
+                        this.textContent = originalText;
+                        this.style.color = '#00dd00';
+                    }, 1500);
+                });
+            });
+            
+            // Random glitch effect
+            setInterval(() => {
+                if (Math.random() > 0.95) {
+                    document.body.style.filter = 'hue-rotate(10deg)';
+                    setTimeout(() => {
+                        document.body.style.filter = 'none';
+                    }, 100);
+                }
+            }, 1000);
+        });
+    </script>
+</body>
 </html>
