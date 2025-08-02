@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal - System Access</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000;
+            color: #00ff00;
+            font-family: 'Courier Prime', monospace;
+            font-size: 14px;
+            line-height: 1.4;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        .terminal {
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(45deg, #001100, #000000);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .terminal::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 255, 0, 0.03) 2px,
+                    rgba(0, 255, 0, 0.03) 4px
+                );
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        .header {
+            background: #001a00;
+            padding: 5px 10px;
+            border-bottom: 1px solid #00ff00;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .content {
+            padding: 20px;
+            height: calc(100vh - 35px);
+            overflow-y: auto;
+        }
+        
+        .line {
+            margin-bottom: 2px;
+            opacity: 0;
+            animation: fadeIn 0.5s forwards;
+        }
+        
+        .prompt {
+            color: #ff4444;
+            font-weight: bold;
+        }
+        
+        .success {
+            color: #00ff00;
+        }
+        
+        .warning {
+            color: #ffaa00;
+        }
+        
+        .error {
+            color: #ff4444;
+        }
+        
+        .info {
+            color: #44aaff;
+        }
+        
+        .cursor {
+            background: #00ff00;
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        .typing {
+            border-right: 2px solid #00ff00;
+            animation: blink 1s infinite;
+        }
+        
+        .matrix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.1;
+        }
+        
+        .progress-bar {
+            width: 0%;
+            height: 2px;
+            background: #00ff00;
+            transition: width 0.3s;
+            margin: 5px 0;
+        }
+        
+        .ascii-art {
+            color: #008800;
+            font-size: 10px;
+            line-height: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal">
+        <div class="header">
+            <span>root@darknet:~# SECURE_SHELL_v2.1.3</span>
+            <span id="time"></span>
+        </div>
+        <div class="content" id="terminal-content">
+            <div class="ascii-art">
+			<pre>
+
+██╗  ██╗ █████╗  ██████╗██╗  ██╗    ███╗   ███╗███████╗    ███╗   ██╗ ██████╗ ██╗    ██╗
+██║  ██║██╔══██╗██╔════╝██║ ██╔╝    ████╗ ████║██╔════╝    ████╗  ██║██╔═══██╗██║    ██║
+███████║███████║██║     █████╔╝     ██╔████╔██║█████╗      ██╔██╗ ██║██║   ██║██║ █╗ ██║
+██╔══██║██╔══██║██║     ██╔═██╗     ██║╚██╔╝██║██╔══╝      ██║╚██╗██║██║   ██║██║███╗██║
+██║  ██║██║  ██║╚██████╗██║  ██╗    ██║ ╚═╝ ██║███████╗    ██║ ╚████║╚██████╔╝╚███╔███╔╝
+╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝    ╚═╝     ╚═╝╚══════╝    ╚═╝  ╚═══╝ ╚═════╝  ╚══╝╚══╝ 
+
+            </pre>
+			</div>
+            <div class="line"><span class="info">Operating System: Gentoo 2.4.1</span></div>
+			<div class="line"><span class="info">Kernel: x86_64 Linux 4.14.52-gentoo</span></div>
+            <div class="line"><span class="info">Initializing penetration modules...</span></div>
+        </div>
+    </div>
+
+    <script>
+        const terminal = document.getElementById('terminal-content');
+        let lineCount = 0;
+        
+        // Update time
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('time').textContent = now.toLocaleTimeString();
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+        
+        // Generate random IP addresses
+        function randomIP() {
+            return `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+        }
+        
+        // Generate random ports
+        function randomPort() {
+            return Math.floor(Math.random() * 65535) + 1;
+        }
+        
+        // Generate random hashes
+        function randomHash() {
+            const chars = '0123456789abcdef';
+            let hash = '';
+            for (let i = 0; i < 32; i++) {
+                hash += chars[Math.floor(Math.random() * chars.length)];
+            }
+            return hash;
+        }
+        
+        // Add line to terminal
+        function addLine(text, className = '') {
+            const line = document.createElement('div');
+            line.className = `line ${className}`;
+            line.innerHTML = text;
+            line.style.animationDelay = `${lineCount * 0.1}s`;
+            terminal.appendChild(line);
+            lineCount++;
+            
+            // Auto scroll
+            terminal.scrollTop = terminal.scrollHeight;
+            
+            // Remove old lines to prevent overload
+            if (terminal.children.length > 200) {
+                terminal.removeChild(terminal.firstChild);
+            }
+        }
+        
+        // Progress bar
+        function showProgress(label, duration = 3000) {
+            addLine(`<span class="info">${label}</span>`);
+            const progressLine = document.createElement('div');
+            progressLine.className = 'line';
+            progressLine.innerHTML = '<div class="progress-bar" id="current-progress"></div>';
+            terminal.appendChild(progressLine);
+            
+            const progressBar = document.getElementById('current-progress');
+            let width = 0;
+            const interval = setInterval(() => {
+                width += Math.random() * 15;
+                if (width >= 100) {
+                    width = 100;
+                    clearInterval(interval);
+                    progressBar.style.width = '100%';
+                    setTimeout(() => addLine('<span class="success">[COMPLETED]</span>'), 500);
+                } else {
+                    progressBar.style.width = width + '%';
+                }
+            }, duration / 20);
+        }
+        
+        // Simulated hacking sequences
+        const hackingSequences = [
+            () => {
+                addLine('<span class="prompt">root@darknet:~#</span> nmap -sS -O cyberdyne-systems.com');
+                setTimeout(() => {
+                    addLine('<span class="info">Starting port scan on cyberdyne-systems.com...</span>');
+                    showProgress('Scanning in progress...');
+                }, 1000);
+                
+                setTimeout(() => {
+                    for (let i = 0; i < 8; i++) {
+                        setTimeout(() => {
+                            const ip = randomIP();
+                            const port = randomPort();
+                            const status = Math.random() > 0.7 ? 'OPEN' : 'CLOSED';
+                            const className = status === 'OPEN' ? 'success' : 'info';
+                            addLine(`<span class="${className}">${ip}:${port} - ${status}</span>`);
+                        }, i * 300);
+                    }
+                }, 4000);
+            },
+            
+            () => {
+                addLine('<span class="prompt">root@darknet:~#</span> sqlmap -u "http://crm.cyberdyne-systems/login" --dbs');
+                setTimeout(() => {
+                    addLine('<span class="warning">Possible SQL injection vulnerability detected</span>');
+                    addLine('<span class="info">Extracting databases...</span>');
+                    showProgress('Database infiltration...');
+                }, 1500);
+                
+                setTimeout(() => {
+                    const databases = ['users', 'admin', 'logs', 'config', 'payments'];
+                    databases.forEach((db, i) => {
+                        setTimeout(() => {
+                            addLine(`<span class="success">Database found: ${db}</span>`);
+                        }, i * 400);
+                    });
+                }, 5000);
+            },
+            
+            () => {
+                addLine('<span class="prompt">root@darknet:~#</span> hydra -l admin -P passwords.txt ssh://192.168.1.100');
+                setTimeout(() => {
+                    addLine('<span class="info">Brute force attack in progress on SSH...</span>');
+                    showProgress('Testing credentials...');
+                }, 1000);
+                
+                setTimeout(() => {
+                    const attempts = ['admin:password123', 'admin:12345', 'admin:qwerty', 'admin:admin123'];
+                    attempts.forEach((attempt, i) => {
+                        setTimeout(() => {
+                            if (i === attempts.length - 1) {
+                                addLine(`<span class="success">SUCCESS! Valid credentials: ${attempt}</span>`);
+                            } else {
+                                addLine(`<span class="error">FAILED: ${attempt}</span>`);
+                            }
+                        }, i * 600);
+                    });
+                }, 4500);
+            },
+            
+            () => {
+                addLine('<span class="prompt">root@darknet:~#</span> msfconsole');
+                setTimeout(() => {
+                    addLine('<span class="info">Metasploit Framework initialized</span>');
+                    addLine('<span class="prompt">msf6 ></span> use exploit/windows/smb/ms17_010_eternalblue');
+                }, 1500);
+                
+                setTimeout(() => {
+                    addLine('<span class="prompt">msf6 exploit(windows/smb/ms17_010_eternalblue) ></span> set RHOSTS ' + randomIP());
+                    addLine('<span class="info">Target set</span>');
+                }, 3000);
+                
+                setTimeout(() => {
+                    addLine('<span class="prompt">msf6 exploit(windows/smb/ms17_010_eternalblue) ></span> exploit');
+                    showProgress('Exploiting vulnerability...');
+                }, 4500);
+                
+                setTimeout(() => {
+                    addLine('<span class="success">Exploit successful! Shell obtained on ' + randomIP() + '</span>');
+                    addLine('<span class="success">Administrator access acquired</span>');
+                }, 8000);
+            },
+            
+            () => {
+                addLine('<span class="prompt">root@darknet:~#</span> aircrack-ng -a2 -b 00:14:6C:7E:40:80 -w wordlist.txt capture.cap');
+                setTimeout(() => {
+                    addLine('<span class="info">Cracking WiFi WPA2 password...</span>');
+                    addLine('<span class="info">SSID: "SecureNetwork_5G"</span>');
+                    showProgress('Dictionary attack in progress...');
+                }, 1200);
+                
+                setTimeout(() => {
+                    for (let i = 0; i < 5; i++) {
+                        setTimeout(() => {
+                            const tested = Math.floor(Math.random() * 10000);
+                            addLine(`<span class="info">Passwords tested: ${tested}</span>`);
+                        }, i * 800);
+                    }
+                }, 4500);
+                
+                setTimeout(() => {
+                    addLine('<span class="success">PASSWORD FOUND: "MySecretPass2024"</span>');
+                }, 9000);
+            }
+        ];
+        
+        // Random system messages
+        function addSystemMessage() {
+            const messages = [
+                '<span class="info">TOR connection established - IP anonymized</span>',
+                '<span class="warning">Tracking attempt detected - Countermeasures activated</span>',
+                '<span class="info">Secure VPN active: Switzerland server</span>',
+                '<span class="success">Firewall bypassed successfully</span>',
+                '<span class="info">Network traffic monitoring: ' + Math.floor(Math.random() * 1000) + ' MB/s</span>',
+                '<span class="warning">Alarm system disabled</span>',
+                '<span class="info">Data backup completed: ' + randomHash().substring(0, 8) + '.enc</span>',
+                '<span class="success">Root access obtained on remote server</span>',
+                '<span class="info">Vulnerability scan completed: 23 critical issues found</span>',
+                '<span class="warning">Stealth mode activated</span>'
+            ];
+            
+            addLine(messages[Math.floor(Math.random() * messages.length)]);
+        }
+        
+        // Start sequences
+        let sequenceIndex = 0;
+        function runNextSequence() {
+            if (sequenceIndex < hackingSequences.length) {
+                hackingSequences[sequenceIndex]();
+                sequenceIndex++;
+            } else {
+                sequenceIndex = 0;
+            }
+            
+            // Next sequence after 15-25 seconds
+            setTimeout(runNextSequence, Math.random() * 10000 + 15000);
+        }
+        
+        // System messages every 3-8 seconds
+        function systemMessages() {
+            addSystemMessage();
+            setTimeout(systemMessages, Math.random() * 5000 + 3000);
+        }
+        
+        // Start everything after 3 seconds
+        setTimeout(() => {
+            runNextSequence();
+            systemMessages();
+        }, 3000);
+        
+        // Typing effect for cursor
+        setTimeout(() => {
+            addLine('<span class="success">All systems operational</span>');
+            setTimeout(() => addLine('<span class="success">Secure connection established</span>'), 1000);
+            setTimeout(() => addLine('<span class="info">Penetration testing mode activated</span>'), 2000);
+        }, 2000);
+    </script>
+</body>
+</html>

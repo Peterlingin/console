@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberDefense SOC Console</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0a0a;
+            color: #00ff00;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .soc-header {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            padding: 10px 20px;
+            border-bottom: 2px solid #00ffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .soc-title {
+            font-size: 24px;
+            color: #00ffff;
+            text-shadow: 0 0 10px #00ffff;
+        }
+
+        .status-bar {
+            display: flex;
+            gap: 20px;
+            font-size: 12px;
+        }
+
+        .status-item {
+            padding: 5px 10px;
+            background: rgba(0, 255, 0, 0.1);
+            border: 1px solid #00ff00;
+            border-radius: 3px;
+        }
+
+        .alert { color: #ff4444; border-color: #ff4444; background: rgba(255, 68, 68, 0.1); }
+        .warning { color: #ffaa00; border-color: #ffaa00; background: rgba(255, 170, 0, 0.1); }
+        .secure { color: #00ff00; border-color: #00ff00; background: rgba(0, 255, 0, 0.1); }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            height: calc(100vh - 80px);
+            gap: 2px;
+            padding: 2px;
+        }
+
+        .panel {
+            background: rgba(0, 20, 40, 0.8);
+            border: 1px solid #333;
+            border-radius: 5px;
+            padding: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .panel-header {
+            color: #00ffff;
+            font-size: 14px;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .terminal {
+            background: #000;
+            color: #00ff00;
+            font-size: 11px;
+            height: calc(100% - 40px);
+            overflow-y: auto;
+            padding: 10px;
+            border: 1px solid #333;
+        }
+
+        .terminal::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .terminal::-webkit-scrollbar-track {
+            background: #111;
+        }
+
+        .terminal::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 3px;
+        }
+
+        .chart-container {
+            height: calc(100% - 40px);
+            position: relative;
+        }
+
+        .threat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            margin: 5px 0;
+            background: rgba(255, 68, 68, 0.1);
+            border-left: 3px solid #ff4444;
+            font-size: 12px;
+        }
+
+        .threat-high { border-left-color: #ff0000; }
+        .threat-medium { border-left-color: #ffaa00; background: rgba(255, 170, 0, 0.1); }
+        .threat-low { border-left-color: #ffff00; background: rgba(255, 255, 0, 0.1); }
+
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid #333;
+        }
+
+        .metric-value {
+            color: #00ffff;
+            font-weight: bold;
+        }
+
+        .blink {
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0.5; }
+        }
+
+        .network-graph {
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, #001122 0%, #000 70%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .node {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #00ff00;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #00ff00;
+        }
+
+        .node.compromised {
+            background: #ff4444;
+            box-shadow: 0 0 10px #ff4444;
+        }
+
+        .connection {
+            position: absolute;
+            height: 1px;
+            background: linear-gradient(90deg, #00ff00, transparent);
+            transform-origin: left;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            height: calc(100% - 40px);
+        }
+
+        .stat-box {
+            background: rgba(0, 50, 100, 0.2);
+            border: 1px solid #0066cc;
+            padding: 15px;
+            text-align: center;
+            border-radius: 5px;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            color: #00ffff;
+            font-weight: bold;
+            text-shadow: 0 0 10px #00ffff;
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+    </style>
+</head>
+<body>
+    <div class="soc-header">
+        <div class="soc-title">🛡️ CYBERDEFENSE SOC CONSOLE v2.1</div>
+        <div class="status-bar">
+            <div class="status-item secure">DEFCON 3</div>
+            <div class="status-item warning blink" id="activeThreats">ACTIVE THREATS: 7</div>
+            <div class="status-item secure">SYSTEMS: 99.2% UP</div>
+            <div class="status-item" id="currentTime"></div>
+        </div>
+    </div>
+
+    <div class="main-grid">
+        <!-- Threat Detection Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                🚨 ACTIVE THREATS
+                <span class="blink" style="color: #ff4444;">●</span>
+            </div>
+            <div id="threatFeed" class="terminal" style="height: calc(100% - 40px);">
+                <!-- Threats will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Network Monitoring -->
+        <div class="panel">
+            <div class="panel-header">
+                🌐 NETWORK TOPOLOGY
+                <span style="color: #00ff00;">●</span>
+            </div>
+            <div class="network-graph" id="networkGraph">
+                <!-- Network nodes will be generated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- System Statistics -->
+        <div class="panel">
+            <div class="panel-header">
+                📊 SYSTEM METRICS
+                <span style="color: #00ff00;">●</span>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div style="color: #00ff00;">Events/Sec</div>
+                    <div class="stat-number pulse" id="eventsPerSec">1,247</div>
+                </div>
+                <div class="stat-box">
+                    <div style="color: #ffaa00;">Bandwidth</div>
+                    <div class="stat-number" id="bandwidth">847 Mbps</div>
+                </div>
+                <div class="stat-box">
+                    <div style="color: #ff4444;">Blocked IPs</div>
+                    <div class="stat-number" id="blockedIPs">23,156</div>
+                </div>
+                <div class="stat-box">
+                    <div style="color: #00ffff;">Active Sessions</div>
+                    <div class="stat-number" id="activeSessions">8,934</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Logs Terminal -->
+        <div class="panel">
+            <div class="panel-header">
+                💻 LIVE SYSTEM LOGS
+                <span style="color: #00ff00;">●</span>
+            </div>
+            <div id="systemLogs" class="terminal">
+                <!-- System logs will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Firewall Monitor -->
+        <div class="panel">
+            <div class="panel-header">
+                🔥 FIREWALL STATUS
+                <span style="color: #00ff00;">●</span>
+            </div>
+            <div id="firewallLogs" class="terminal">
+                <!-- Firewall logs will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Incident Response -->
+        <div class="panel">
+            <div class="panel-header">
+                🚑 INCIDENT RESPONSE
+                <span class="blink" style="color: #ffaa00;">●</span>
+            </div>
+            <div id="incidentTerminal" class="terminal">
+                <!-- Incident response will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let threatCount = 7;
+        let eventsCount = 1247;
+        let bandwidthCount = 847;
+        let blockedIPsCount = 23156;
+        let activeSessionsCount = 8934;
+
+        // Sample data arrays
+        const threatTypes = ['Malware', 'DDoS', 'Phishing', 'Brute Force', 'SQL Injection', 'XSS', 'Ransomware', 'APT'];
+        const countries = ['CN', 'RU', 'KP', 'IR', 'BR', 'IN', 'PK', 'VN', 'TR', 'RO'];
+        const ips = ['192.168.1.', '10.0.0.', '172.16.0.', '203.0.113.', '198.51.100.'];
+        const userAgents = ['curl/7.68.0', 'python-requests/2.25.1', 'Nmap NSE', 'sqlmap/1.5.2', 'Metasploit'];
+
+        // Update current time
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('currentTime').textContent = now.toLocaleTimeString();
+        }
+
+        // Generate random IP
+        function randomIP() {
+            const base = ips[Math.floor(Math.random() * ips.length)];
+            return base + Math.floor(Math.random() * 255);
+        }
+
+        // Generate threat feed
+        function addThreat() {
+            const threatFeed = document.getElementById('threatFeed');
+            const threat = threatTypes[Math.floor(Math.random() * threatTypes.length)];
+            const country = countries[Math.floor(Math.random() * countries.length)];
+            const ip = randomIP();
+            const severity = Math.random() > 0.7 ? 'HIGH' : Math.random() > 0.4 ? 'MEDIUM' : 'LOW';
+            const time = new Date().toLocaleTimeString();
+            
+            const severityClass = severity === 'HIGH' ? 'threat-high' : severity === 'MEDIUM' ? 'threat-medium' : 'threat-low';
+            
+            const threatDiv = document.createElement('div');
+            threatDiv.className = `threat-item ${severityClass}`;
+            threatDiv.innerHTML = `
+                <div>
+                    <strong>[${severity}]</strong> ${threat} detected from ${ip} (${country})<br>
+                    <small>Time: ${time} | Rule: SOC-${Math.floor(Math.random() * 9999)}</small>
+                </div>
+            `;
+            
+            threatFeed.insertBefore(threatDiv, threatFeed.firstChild);
+            
+            // Keep only last 20 threats
+            while (threatFeed.children.length > 20) {
+                threatFeed.removeChild(threatFeed.lastChild);
+            }
+            
+            // Update threat counter
+            if (severity === 'HIGH') {
+                threatCount++;
+                document.getElementById('activeThreats').textContent = `ACTIVE THREATS: ${threatCount}`;
+            }
+        }
+
+        // Generate system logs
+        function addSystemLog() {
+            const systemLogs = document.getElementById('systemLogs');
+            const logTypes = ['INFO', 'WARN', 'ERROR', 'DEBUG'];
+            const services = ['sshd', 'nginx', 'fail2ban', 'iptables', 'snort', 'suricata'];
+            const logType = logTypes[Math.floor(Math.random() * logTypes.length)];
+            const service = services[Math.floor(Math.random() * services.length)];
+            const time = new Date().toISOString();
+            
+            const logMessages = {
+                'INFO': [`Authentication successful for user admin from ${randomIP()}`, 
+                        `Service ${service} started successfully`,
+                        `Configuration reload completed`,
+                        `Database connection established`],
+                'WARN': [`Failed login attempt from ${randomIP()}`,
+                        `High CPU usage detected: 87%`,
+                        `Memory usage above threshold: 91%`,
+                        `Unusual network activity detected`],
+                'ERROR': [`Connection timeout to ${randomIP()}`,
+                         `Authentication failed for user root`,
+                         `Service ${service} crashed unexpectedly`,
+                         `Database connection lost`],
+                'DEBUG': [`Packet analysis completed for ${randomIP()}`,
+                         `Rule engine processing: 1247 rules/sec`,
+                         `Memory allocation: 2.3GB used`,
+                         `Thread pool: 12/16 active`]
+            };
+            
+            const message = logMessages[logType][Math.floor(Math.random() * logMessages[logType].length)];
+            
+            const logLine = document.createElement('div');
+            logLine.innerHTML = `<span style="color: ${logType === 'ERROR' ? '#ff4444' : logType === 'WARN' ? '#ffaa00' : '#00ff00'}">[${time}] ${logType}:</span> ${message}`;
+            
+            systemLogs.insertBefore(logLine, systemLogs.firstChild);
+            
+            // Keep only last 30 logs
+            while (systemLogs.children.length > 30) {
+                systemLogs.removeChild(systemLogs.lastChild);
+            }
+        }
+
+        // Generate firewall logs
+        function addFirewallLog() {
+            const firewallLogs = document.getElementById('firewallLogs');
+            const actions = ['ACCEPT', 'DROP', 'REJECT'];
+            const protocols = ['TCP', 'UDP', 'ICMP'];
+            const ports = [22, 80, 443, 3389, 21, 25, 53, 8080, 3306, 1433];
+            
+            const action = actions[Math.floor(Math.random() * actions.length)];
+            const protocol = protocols[Math.floor(Math.random() * protocols.length)];
+            const srcIP = randomIP();
+            const dstIP = randomIP();
+            const port = ports[Math.floor(Math.random() * ports.length)];
+            const time = new Date().toLocaleTimeString();
+            
+            const logLine = document.createElement('div');
+            const color = action === 'DROP' || action === 'REJECT' ? '#ff4444' : '#00ff00';
+            logLine.innerHTML = `<span style="color: ${color}">[${time}] ${action}</span> ${protocol} ${srcIP}:${Math.floor(Math.random() * 65535)} → ${dstIP}:${port}`;
+            
+            firewallLogs.insertBefore(logLine, firewallLogs.firstChild);
+            
+            // Keep only last 25 logs
+            while (firewallLogs.children.length > 25) {
+                firewallLogs.removeChild(firewallLogs.lastChild);
+            }
+        }
+
+        // Generate incident response logs
+        function addIncidentLog() {
+            const incidentTerminal = document.getElementById('incidentTerminal');
+            
+            const incidents = [
+                `🔍 Investigating suspicious activity from ${randomIP()}`,
+                `🚫 IP ${randomIP()} added to blacklist`,
+                `📋 Analyst assigned to case IR-${Math.floor(Math.random() * 99999)}`,
+                `⚡ Automated response triggered: Block traffic`,
+                `📞 Escalating to Level 2 SOC team`,
+                `✅ False positive confirmed for ${randomIP()}`,
+                `🔒 User account locked: admin_${Math.floor(Math.random() * 999)}`,
+                `🛡️ Containment measures activated`,
+                `📊 IOC analysis completed: ${Math.floor(Math.random() * 50)} matches found`,
+                `🔄 Initiating backup restoration protocol`
+            ];
+            
+            const incident = incidents[Math.floor(Math.random() * incidents.length)];
+            const time = new Date().toLocaleTimeString();
+            
+            const incidentLine = document.createElement('div');
+            incidentLine.innerHTML = `<span style="color: #ffaa00">[${time}]</span> ${incident}`;
+            
+            incidentTerminal.insertBefore(incidentLine, incidentTerminal.firstChild);
+            
+            // Keep only last 20 incidents
+            while (incidentTerminal.children.length > 20) {
+                incidentTerminal.removeChild(incidentTerminal.lastChild);
+            }
+        }
+
+        // Create network topology
+        function createNetworkTopology() {
+            const networkGraph = document.getElementById('networkGraph');
+            const width = networkGraph.offsetWidth;
+            const height = networkGraph.offsetHeight;
+            
+            // Clear existing nodes
+            networkGraph.innerHTML = '';
+            
+            // Create nodes
+            for (let i = 0; i < 25; i++) {
+                const node = document.createElement('div');
+                node.className = Math.random() > 0.9 ? 'node compromised' : 'node';
+                node.style.left = Math.random() * (width - 10) + 'px';
+                node.style.top = Math.random() * (height - 10) + 'px';
+                networkGraph.appendChild(node);
+                
+                // Add connections
+                if (Math.random() > 0.7) {
+                    const connection = document.createElement('div');
+                    connection.className = 'connection';
+                    connection.style.left = node.style.left;
+                    connection.style.top = node.style.top;
+                    connection.style.width = Math.random() * 100 + 20 + 'px';
+                    connection.style.transform = `rotate(${Math.random() * 360}deg)`;
+                    networkGraph.appendChild(connection);
+                }
+            }
+        }
+
+        // Update statistics
+        function updateStats() {
+            eventsCount += Math.floor(Math.random() * 100) - 50;
+            bandwidthCount += Math.floor(Math.random() * 50) - 25;
+            activeSessionsCount += Math.floor(Math.random() * 20) - 10;
+            
+            if (Math.random() > 0.8) {
+                blockedIPsCount += Math.floor(Math.random() * 10) + 1;
+            }
+            
+            document.getElementById('eventsPerSec').textContent = eventsCount.toLocaleString();
+            document.getElementById('bandwidth').textContent = bandwidthCount + ' Mbps';
+            document.getElementById('blockedIPs').textContent = blockedIPsCount.toLocaleString();
+            document.getElementById('activeSessions').textContent = activeSessionsCount.toLocaleString();
+        }
+
+        // Initialize SOC console
+        function initSOC() {
+            updateTime();
+            createNetworkTopology();
+            
+            // Initial data population
+            for (let i = 0; i < 10; i++) {
+                addThreat();
+                addSystemLog();
+                addFirewallLog();
+                addIncidentLog();
+            }
+            
+            // Set up intervals for live updates
+            setInterval(updateTime, 1000);
+            setInterval(addThreat, 3000);
+            setInterval(addSystemLog, 1500);
+            setInterval(addFirewallLog, 2000);
+            setInterval(addIncidentLog, 5000);
+            setInterval(updateStats, 2500);
+            setInterval(createNetworkTopology, 30000);
+        }
+
+        // Start the SOC console
+        document.addEventListener('DOMContentLoaded', initSOC);
+    </script>
+</body>
+</html>

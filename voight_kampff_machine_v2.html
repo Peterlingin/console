@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voight-Kampff Machine</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Courier+Prime:wght@400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #2a2a1a 100%);
+            font-family: 'Orbitron', monospace;
+            color: #00ff41;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        /* Atmospheric background effects */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(255, 153, 0, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(0, 255, 65, 0.03) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border: 2px solid #ff9900;
+            background: linear-gradient(135deg, #1a1a0a, #2a2a1a);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 
+                0 0 20px rgba(255, 153, 0, 0.3),
+                inset 0 0 20px rgba(255, 153, 0, 0.1);
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #ff9900;
+            text-shadow: 0 0 10px #ff9900;
+            margin-bottom: 10px;
+            letter-spacing: 3px;
+        }
+        
+        .header p {
+            font-family: 'Courier Prime', monospace;
+            color: #00ff41;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+        
+        .tyrell-corp {
+            font-size: 0.9rem;
+            color: #ff6600;
+            font-style: italic;
+        }
+        
+        .machine-container {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .control-panel {
+            background: linear-gradient(135deg, #1a1a1a, #2a2a0a);
+            border: 3px solid #00ff41;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 
+                0 0 30px rgba(0, 255, 65, 0.4),
+                inset 0 0 20px rgba(0, 255, 65, 0.1);
+            position: relative;
+        }
+        
+        .control-panel::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #00ff41, #ff9900, #00ff41);
+            border-radius: 15px;
+            z-index: -1;
+            opacity: 0.7;
+            animation: borderPulse 3s ease-in-out infinite;
+        }
+        
+        @keyframes borderPulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+        
+        .bellows {
+            width: 100%;
+            height: 120px;
+            background: 
+                linear-gradient(to right, #333 0%, #555 50%, #333 100%),
+                repeating-linear-gradient(90deg, transparent, transparent 5px, rgba(255, 153, 0, 0.1) 5px, rgba(255, 153, 0, 0.1) 10px);
+            border: 2px solid #ff9900;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        .bellows-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            border: 3px solid #00ff41;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 255, 65, 0.2), transparent);
+            animation: breathe 2s ease-in-out infinite;
+        }
+        
+        @keyframes breathe {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.7; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+        }
+        
+        .sensors {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .sensor {
+            background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+            border: 2px solid #ff6600;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .sensor::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 102, 0, 0.2), transparent);
+            animation: sensorScan 3s linear infinite;
+        }
+        
+        @keyframes sensorScan {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        .sensor-label {
+            font-size: 0.8rem;
+            color: #ff6600;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .sensor-value {
+            font-size: 1.2rem;
+            color: #00ff41;
+            font-weight: bold;
+            font-family: 'Courier Prime', monospace;
+        }
+        
+        .question-display {
+            background: linear-gradient(135deg, #0a0a0a, #1a1a1a);
+            border: 3px solid #ff9900;
+            border-radius: 15px;
+            padding: 30px;
+            position: relative;
+            min-height: 400px;
+            box-shadow: 
+                0 0 25px rgba(255, 153, 0, 0.3),
+                inset 0 0 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        .screen-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ff9900;
+        }
+        
+        .screen-title {
+            font-size: 1.3rem;
+            color: #ff9900;
+            font-weight: 700;
+        }
+        
+        .test-status {
+            font-size: 0.9rem;
+            color: #00ff41;
+            font-family: 'Courier Prime', monospace;
+        }
+        
+        .question-text {
+            font-family: 'Courier Prime', monospace;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #00ff41;
+            margin-bottom: 25px;
+            min-height: 120px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            border-left: 4px solid #00ff41;
+            position: relative;
+        }
+        
+        .question-text::before {
+            content: '>';
+            position: absolute;
+            left: 8px;
+            top: 20px;
+            color: #ff9900;
+            font-weight: bold;
+        }
+        
+        .response-area {
+            margin-bottom: 20px;
+        }
+        
+        .response-input {
+            width: 100%;
+            min-height: 80px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #00ff41;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier Prime', monospace;
+            font-size: 1rem;
+            color: #00ff41;
+            resize: vertical;
+        }
+        
+        .response-input:focus {
+            outline: none;
+            border-color: #ff9900;
+            box-shadow: 0 0 10px rgba(255, 153, 0, 0.5);
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #ff9900, #ff6600);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 1rem;
+            color: #000;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .btn:hover::before {
+            left: 100%;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 153, 0, 0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #00ff41, #00cc33);
+        }
+        
+        .analysis-panel {
+            background: linear-gradient(135deg, #1a0a0a, #2a1a1a);
+            border: 2px solid #ff6600;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            position: relative;
+        }
+        
+        .analysis-title {
+            color: #ff6600;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .metric {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ff9900;
+            text-align: center;
+        }
+        
+        .metric-label {
+            color: #ff9900;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+        
+        .metric-value {
+            color: #00ff41;
+            font-size: 1.4rem;
+            font-weight: bold;
+            font-family: 'Courier Prime', monospace;
+        }
+        
+        .warning {
+            background: linear-gradient(135deg, #3a0000, #2a0000);
+            border: 2px solid #ff0000;
+            color: #ff6666;
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            animation: warningPulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes warningPulse {
+            0%, 100% { box-shadow: 0 0 5px rgba(255, 0, 0, 0.3); }
+            50% { box-shadow: 0 0 20px rgba(255, 0, 0, 0.6); }
+        }
+        
+        .status-lights {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+        
+        .status-light {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #333;
+            position: relative;
+        }
+        
+        .status-light.active {
+            background: #00ff41;
+            box-shadow: 0 0 10px #00ff41;
+            animation: statusBlink 1s ease-in-out infinite;
+        }
+        
+        .status-light.warning {
+            background: #ff9900;
+            box-shadow: 0 0 10px #ff9900;
+        }
+        
+        .status-light.error {
+            background: #ff0000;
+            box-shadow: 0 0 10px #ff0000;
+        }
+        
+        @keyframes statusBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        @media (max-width: 768px) {
+            .machine-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            .metrics {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>VOIGHT-KAMPFF MACHINE</h1>
+            <p>EMPATHY DETECTION SYSTEM</p>
+            <p>VERSION 2.0 - TYRELL CORPORATION</p>
+            <p class="tyrell-corp">"More Human Than Human"</p>
+        </div>
+        
+        <div class="machine-container">
+            <div class="control-panel">
+                <div class="bellows">
+                    <div class="bellows-indicator"></div>
+                </div>
+                
+                <div class="status-lights">
+                    <div class="status-light active" title="System Active"></div>
+                    <div class="status-light active" title="Respiratory Monitor"></div>
+                    <div class="status-light active" title="Ocular Sensor"></div>
+                    <div class="status-light" title="Analysis Complete"></div>
+                </div>
+                
+                <div class="sensors">
+                    <div class="sensor">
+                        <div class="sensor-label">Respiration</div>
+                        <div class="sensor-value" id="respiration">16 BPM</div>
+                    </div>
+                    <div class="sensor">
+                        <div class="sensor-label">Heart Rate</div>
+                        <div class="sensor-value" id="heartrate">72 BPM</div>
+                    </div>
+                    <div class="sensor">
+                        <div class="sensor-label">Body Temp</div>
+                        <div class="sensor-value" id="temperature">98.6°F</div>
+                    </div>
+                    <div class="sensor">
+                        <div class="sensor-label">Eye Track</div>
+                        <div class="sensor-value" id="eyetrack">NORMAL</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="question-display">
+                <div class="screen-header">
+                    <div class="screen-title">EMPATHY TEST</div>
+                    <div class="test-status" id="testStatus">READY</div>
+                </div>
+                
+                <div class="question-text" id="questionText">
+                    Click "Begin Test" to start the Voight-Kampff empathy assessment. The system will present scenarios designed to measure emotional response patterns. Please respond naturally and honestly.
+                </div>
+                
+                <div class="response-area">
+                    <textarea class="response-input" id="responseInput" placeholder="Enter your response here..." disabled></textarea>
+                </div>
+                
+                <div class="controls">
+                    <button class="btn" id="beginBtn" onclick="beginTest()">Begin Test</button>
+                    <button class="btn btn-secondary" id="nextBtn" onclick="nextQuestion()" disabled>Next Question</button>
+                    <button class="btn" id="analyzeBtn" onclick="analyzeResponse()" disabled>Analyze</button>
+                    <button class="btn" onclick="resetTest()">Reset Test</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="analysis-panel" id="analysisPanel" style="display: none;">
+            <div class="analysis-title">BIOMETRIC ANALYSIS</div>
+            <div class="metrics">
+                <div class="metric">
+                    <div class="metric-label">Empathy Index</div>
+                    <div class="metric-value" id="empathyIndex">--</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">Response Time</div>
+                    <div class="metric-value" id="responseTime">--</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">Stress Level</div>
+                    <div class="metric-value" id="stressLevel">--</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">Classification</div>
+                    <div class="metric-value" id="classification">--</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            "You're watching television. Suddenly you realize there's a wasp crawling on your arm. Describe your reaction.",
+            
+            "You're in a desert walking along in the sand when all of a sudden you look down, and you see a tortoise, it's crawling toward you. You reach down, you flip the tortoise over on its back. The tortoise lays on its back, its belly baking in the hot sun, beating its legs trying to turn itself over, but it can't, not without your help. But you're not helping. Why is that?",
+            
+            "Describe in single words only, the good things that come into your mind about your mother.",
+            
+            "You become pregnant by a man who runs off with your best friend, and you decide to get an abortion. How do you feel about that?",
+            
+            "One more question: You're in a meat packing plant. You see a worker fall into the machinery. There's blood everywhere. How do you react?",
+            
+            "You're watching a stage play - a banquet is in progress. The guests are enjoying an appetizer of raw oysters. The entree consists of boiled dog stuffed with rice. The guests seem to be enjoying it. Describe your feelings.",
+            
+            "You have a little boy. He shows you his butterfly collection plus the killing jar. What do you say to him?",
+            
+            "You're reading a magazine. You come across a full-page nude photo of a girl. You show it to your husband. He likes it so much, he hangs it on your bedroom wall. How do you react?",
+            
+            "Your little boy shows you his butterfly collection, including his killing jar. What's your reaction?",
+            
+            "You are given a calfskin wallet for your birthday. How do you react to this gift?",
+            
+            "It's your birthday. Someone gives you a calfskin wallet. You accept it. Then you discover it's made from an endangered species. What are your thoughts?",
+            
+            "You're at a party. Someone tells an offensive joke about a minority group. Everyone laughs. What do you do?",
+            
+            "A child is drowning in a lake. You're an excellent swimmer, but you're wearing an expensive suit. What do you do and why?",
+            
+            "You find a wounded bird on the street. Its wing appears to be broken and it cannot fly. Describe your actions.",
+            
+            "You receive a leather jacket as a gift from someone you care about. Later you learn it was made from an endangered animal. How do you handle this situation?"
+        ];
+
+        let currentQuestionIndex = 0;
+        let testStarted = false;
+        let questionStartTime = 0;
+        let responses = [];
+        let vitalSigns = {
+            respiration: 16,
+            heartRate: 72,
+            temperature: 98.6,
+            eyeTrack: 'NORMAL'
+        };
+        
+        // Simulate vital signs
+        function updateVitalSigns() {
+            if (testStarted) {
+                // Simulate stress responses during test
+                vitalSigns.respiration = Math.floor(Math.random() * 8) + 18; // 18-25
+                vitalSigns.heartRate = Math.floor(Math.random() * 20) + 75; // 75-95
+                vitalSigns.temperature = (Math.random() * 2 + 98.2).toFixed(1); // 98.2-100.2
+                
+                const eyeStates = ['NORMAL', 'DILATED', 'TRACKING', 'RAPID'];
+                vitalSigns.eyeTrack = eyeStates[Math.floor(Math.random() * eyeStates.length)];
+            } else {
+                // Normal resting vitals
+                vitalSigns.respiration = Math.floor(Math.random() * 4) + 14; // 14-17
+                vitalSigns.heartRate = Math.floor(Math.random() * 10) + 68; // 68-77
+                vitalSigns.temperature = (Math.random() * 0.8 + 98.2).toFixed(1); // 98.2-99.0
+                vitalSigns.eyeTrack = 'NORMAL';
+            }
+            
+            document.getElementById('respiration').textContent = vitalSigns.respiration + ' BPM';
+            document.getElementById('heartrate').textContent = vitalSigns.heartRate + ' BPM';
+            document.getElementById('temperature').textContent = vitalSigns.temperature + '°F';
+            document.getElementById('eyetrack').textContent = vitalSigns.eyeTrack;
+        }
+        
+        function beginTest() {
+            testStarted = true;
+            currentQuestionIndex = 0;
+            responses = [];
+            
+            document.getElementById('beginBtn').disabled = true;
+            document.getElementById('nextBtn').disabled = false;
+            document.getElementById('analyzeBtn').disabled = false;
+            document.getElementById('responseInput').disabled = false;
+            document.getElementById('testStatus').textContent = 'IN PROGRESS';
+            document.getElementById('analysisPanel').style.display = 'none';
+            
+            // Add warning status light
+            const statusLights = document.querySelectorAll('.status-light');
+            statusLights[3].classList.add('warning');
+            
+            displayQuestion();
+        }
+        
+        function displayQuestion() {
+            if (currentQuestionIndex < questions.length) {
+                const question = questions[currentQuestionIndex];
+                document.getElementById('questionText').textContent = question;
+                document.getElementById('responseInput').value = '';
+                document.getElementById('responseInput').focus();
+                questionStartTime = Date.now();
+                
+                // Type writer effect
+                typeWriter(question, 'questionText');
+            } else {
+                completeTest();
+            }
+        }
+        
+        function typeWriter(text, elementId, index = 0) {
+            const element = document.getElementById(elementId);
+            if (index === 0) element.textContent = '';
+            
+            if (index < text.length) {
+                element.textContent += text.charAt(index);
+                setTimeout(() => typeWriter(text, elementId, index + 1), 30);
+            }
+        }
+        
+        function nextQuestion() {
+            const response = document.getElementById('responseInput').value.trim();
+            if (response) {
+                const responseTime = (Date.now() - questionStartTime) / 1000;
+                responses.push({
+                    question: questions[currentQuestionIndex],
+                    response: response,
+                    responseTime: responseTime,
+                    vitals: {...vitalSigns}
+                });
+                
+                currentQuestionIndex++;
+                displayQuestion();
+            } else {
+                alert('Please provide a response before continuing.');
+            }
+        }
+        
+        function analyzeResponse() {
+            if (responses.length === 0) {
+                alert('No responses to analyze. Please answer at least one question.');
+                return;
+            }
+            
+            // Advanced text analysis
+            const empathyScore = performTextAnalysis();
+            const avgResponseTime = responses.reduce((sum, r) => sum + r.responseTime, 0) / responses.length;
+            const stressLevel = calculateStressLevel();
+            
+            let classification = determineClassification(empathyScore, avgResponseTime, stressLevel);
+            
+            // Color code classification
+            const classificationElement = document.getElementById('classification');
+            classificationElement.textContent = classification;
+            
+            // Remove any existing warnings
+            const existingWarning = document.querySelector('.warning');
+            if (existingWarning) existingWarning.remove();
+            
+            if (classification === 'REPLICANT') {
+                classificationElement.style.color = '#ff0000';
+                document.querySelector('.analysis-panel').innerHTML += 
+                    '<div class="warning">⚠️ REPLICANT DETECTED - INITIATE RETIREMENT PROTOCOL ⚠️</div>';
+            } else if (classification === 'SUSPECT') {
+                classificationElement.style.color = '#ff9900';
+                document.querySelector('.analysis-panel').innerHTML += 
+                    '<div class="warning" style="background: linear-gradient(135deg, #3a2200, #2a1800); border-color: #ff9900; color: #ffcc66;">⚠️ ANOMALOUS READINGS - RECOMMEND EXTENDED TESTING ⚠️</div>';
+            } else {
+                classificationElement.style.color = '#00ff41';
+            }
+            
+            document.getElementById('empathyIndex').textContent = empathyScore + '/100';
+            document.getElementById('responseTime').textContent = avgResponseTime.toFixed(1) + 's';
+            document.getElementById('stressLevel').textContent = stressLevel;
+            document.getElementById('analysisPanel').style.display = 'block';
+            
+            // Update status lights
+            const statusLights = document.querySelectorAll('.status-light');
+            statusLights[3].classList.remove('warning');
+            if (classification === 'REPLICANT') {
+                statusLights[3].classList.add('error');
+            } else {
+                statusLights[3].classList.add('active');
+            }
+        }
+        
+        function performTextAnalysis() {
+            let totalScore = 0;
+            let responseCount = 0;
+            
+            // Empathy indicators (positive scoring)
+            const empathyWords = [
+                'help', 'care', 'concern', 'worried', 'sad', 'sorry', 'feel', 'emotion',
+                'empathy', 'compassion', 'kindness', 'love', 'protect', 'save', 'rescue',
+                'comfort', 'gentle', 'tender', 'sympathy', 'understand', 'pain', 'suffer',
+                'hurt', 'cry', 'tears', 'upset', 'disturbed', 'troubled', 'wrong',
+                'cruel', 'unfair', 'horrible', 'terrible', 'awful', 'heartbreaking',
+                'innocent', 'vulnerable', 'defenseless', 'helpless', 'cherish', 'treasure'
+            ];
+            
+            // Detachment indicators (negative scoring)
+            const detachmentWords = [
+                'nothing', 'whatever', 'dont care', "don't care", 'indifferent', 'normal',
+                'fine', 'okay', 'logical', 'practical', 'efficient', 'necessary',
+                'survival', 'rational', 'reasonable', 'acceptable', 'appropriate',
+                'standard', 'typical', 'expected', 'natural', 'inevitable',
+                'irrelevant', 'unimportant', 'meaningless', 'pointless'
+            ];
+            
+            // Concerning patterns (very negative scoring)
+            const concerningPatterns = [
+                'kill', 'destroy', 'eliminate', 'dispose', 'terminate', 'end',
+                'useful', 'resource', 'tool', 'object', 'thing', 'specimen',
+                'interesting', 'fascinating', 'curious', 'study', 'analyze',
+                'experiment', 'test', 'observe', 'examine', 'investigate'
+            ];
+            
+            responses.forEach(response => {
+                const text = response.response.toLowerCase();
+                const words = text.split(/\s+/);
+                let responseScore = 50; // Base neutral score
+                
+                // Analyze word content
+                empathyWords.forEach(word => {
+                    if (text.includes(word)) {
+                        responseScore += 8;
+                    }
+                });
+                
+                detachmentWords.forEach(word => {
+                    if (text.includes(word)) {
+                        responseScore -= 6;
+                    }
+                });
+                
+                concerningPatterns.forEach(word => {
+                    if (text.includes(word)) {
+                        responseScore -= 12;
+                    }
+                });
+                
+                // Response length analysis
+                if (words.length < 3) {
+                    responseScore -= 10; // Very short responses are suspicious
+                } else if (words.length > 20) {
+                    responseScore += 5; // Detailed responses show engagement
+                }
+                
+                // Question marks indicate questioning/uncertainty (human trait)
+                if (text.includes('?')) {
+                    responseScore += 3;
+                }
+                
+                // Exclamation points indicate emotional response
+                if (text.includes('!')) {
+                    responseScore += 4;
+                }
+                
+                // First person emotional expressions
+                if (text.includes('i feel') || text.includes('i would feel') || 
+                    text.includes('i think') || text.includes('i believe')) {
+                    responseScore += 6;
+                }
+                
+                // Response time factor (very quick responses are suspicious)
+                if (response.responseTime < 2) {
+                    responseScore -= 8;
+                } else if (response.responseTime > 10) {
+                    responseScore += 3; // Thoughtful consideration
+                }
+                
+                // Clamp score between 0-100
+                responseScore = Math.max(0, Math.min(100, responseScore));
+                totalScore += responseScore;
+                responseCount++;
+            });
+            
+            return Math.round(totalScore / responseCount);
+        }
+        
+        function calculateStressLevel() {
+            const avgHeartRate = Math.floor(Math.random() * 15) + 75; // Simulate based on test
+            const avgRespiration = Math.floor(Math.random() * 8) + 16;
+            
+            // Factor in response times - very fast responses suggest rehearsed answers
+            const avgResponseTime = responses.reduce((sum, r) => sum + r.responseTime, 0) / responses.length;
+            
+            let stressScore = 0;
+            if (avgHeartRate > 90) stressScore += 2;
+            else if (avgHeartRate > 80) stressScore += 1;
+            
+            if (avgRespiration > 22) stressScore += 2;
+            else if (avgRespiration > 18) stressScore += 1;
+            
+            if (avgResponseTime < 3) stressScore += 2; // Suspiciously fast
+            else if (avgResponseTime > 15) stressScore += 1; // High deliberation
+            
+            if (stressScore >= 4) return 'CRITICAL';
+            if (stressScore >= 2) return 'HIGH';
+            if (stressScore >= 1) return 'MODERATE';
+            return 'LOW';
+        }
+        
+        function determineClassification(empathyScore, avgResponseTime, stressLevel) {
+            let suspicionPoints = 0;
+            
+            // Empathy score analysis
+            if (empathyScore < 40) suspicionPoints += 3;
+            else if (empathyScore < 60) suspicionPoints += 2;
+            else if (empathyScore < 75) suspicionPoints += 1;
+            
+            // Response time analysis
+            if (avgResponseTime < 2) suspicionPoints += 2; // Too fast, rehearsed
+            else if (avgResponseTime > 20) suspicionPoints += 1; // Overly deliberate
+            
+            // Stress level analysis
+            if (stressLevel === 'CRITICAL') suspicionPoints += 2;
+            else if (stressLevel === 'HIGH') suspicionPoints += 1;
+            else if (stressLevel === 'LOW' && empathyScore < 60) suspicionPoints += 1; // Unnaturally calm
+            
+            // Classification based on suspicion points
+            if (suspicionPoints >= 5) return 'REPLICANT';
+            if (suspicionPoints >= 3) return 'SUSPECT';
+            if (suspicionPoints >= 1) return 'INCONCLUSIVE';
+            return 'HUMAN';
+        }
+        
+        function completeTest() {
+            document.getElementById('testStatus').textContent = 'COMPLETE';
+            document.getElementById('questionText').textContent = 'Test sequence completed. Click "Analyze" to process results and determine subject classification.';
+            document.getElementById('nextBtn').disabled = true;
+            document.getElementById('responseInput').disabled = true;
+            
+            analyzeResponse();
+        }
+        
+        function resetTest() {
+            testStarted = false;
+            currentQuestionIndex = 0;
+            responses = [];
+            
+            document.getElementById('beginBtn').disabled = false;
+            document.getElementById('nextBtn').disabled = true;
+            document.getElementById('analyzeBtn').disabled = true;
+            document.getElementById('responseInput').disabled = true;
+            document.getElementById('responseInput').value = '';
+            document.getElementById('testStatus').textContent = 'READY';
+            document.getElementById('questionText').textContent = 
+                'Click "Begin Test" to start the Voight-Kampff empathy assessment. The system will present scenarios designed to measure emotional response patterns. Please respond naturally and honestly.';
+            document.getElementById('analysisPanel').style.display = 'none';
+            
+            // Reset status lights
+            const statusLights = document.querySelectorAll('.status-light');
+            statusLights.forEach((light, index) => {
+                light.className = 'status-light';
+                if (index < 3) light.classList.add('active');
+            });
+        }
+        
+        // Shuffle questions for variety
+        function shuffleQuestions() {
+            for (let i = questions.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [questions[i], questions[j]] = [questions[j], questions[i]];
+            }
+        }
+        
+        // Initialize
+        shuffleQuestions();
+        setInterval(updateVitalSigns, 2000);
+        updateVitalSigns();
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && e.ctrlKey && !document.getElementById('nextBtn').disabled) {
+                nextQuestion();
+            }
+        });
+    </script>
+</body>
+</html>
