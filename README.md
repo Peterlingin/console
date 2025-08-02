@@ -3,12 +3,14 @@ A project full of fake, pointless consoles—packed into a single HTML file. No 
 You can check out the full website for this project at:
 👉 https://peterlingin.github.io/console/
 
+---
+
 **Threat Map**
 A realistic threat monitoring dashboard inspired by the classic War Games movie aesthetic. The dashboard generates completely random dummy data and runs continuously with new "attacks" appearing every 1-3 seconds. All data is fictional and for demonstration purposes only. The single HTML file is fully self-contained and will work offline once saved.
 
 The result is a cinematic and engaging experience that feels like something from a high-tech command center or blockbuster movie. The animations are layered and synchronized to create a truly immersive "cyber warfare" atmosphere while maintaining the classic terminal aesthetic.
 
-The map is about as useful as the flashy ones from big-name security vendors—looks cool, tells you nothing.
+🥶 The map is about as useful as the flashy ones from big-name security vendors—looks cool, tells you nothing.
 
 ---
 
