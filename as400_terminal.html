@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AS/400 5250 Terminal Emulator</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'IBM Plex Mono', 'Courier New', monospace;
+            background: #000;
+            color: #00ff00;
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        .terminal {
+            background: #001100;
+            color: #00ff00;
+            width: 100vw;
+            height: 100vh;
+            padding: 10px 20px;
+            font-size: 14px;
+            line-height: 1.1;
+            white-space: pre;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .terminal::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                linear-gradient(transparent 50%, rgba(0, 255, 0, 0.03) 50%);
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .content {
+            position: relative;
+            z-index: 2;
+            height: 100%;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            border-bottom: 1px solid #00ff00;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+        }
+        
+        .input-field {
+            background: transparent;
+            border: none;
+            color: #00ff00;
+            font-family: inherit;
+            font-size: inherit;
+            outline: none;
+            width: auto;
+            text-transform: uppercase;
+        }
+        
+        .input-field:focus {
+            background: #00ff00;
+            color: #000;
+        }
+        
+        .password-field {
+            background: transparent;
+            border: none;
+            color: #00ff00;
+            font-family: inherit;
+            font-size: inherit;
+            outline: none;
+            width: auto;
+        }
+        
+        .password-field:focus {
+            background: #00ff00;
+            color: #000;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .error {
+            color: #ff0000;
+            animation: blink 0.5s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        .cursor {
+            background: #00ff00;
+            animation: cursor-blink 1s infinite;
+        }
+        
+        @keyframes cursor-blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        .data-table {
+            margin-top: 20px;
+            border: 1px solid #00ff00;
+        }
+        
+        .data-row {
+            border-bottom: 1px solid #00ff00;
+            padding: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal">
+        <div class="content">
+            <!-- Login Screen -->
+            <div id="login-screen">
+<div class="header">AS/400 - IBM i Operating System V7R4
+SYSTEM:  IBMI001    SUBSYSTEM: QINTER    DISPLAY: DSP01</div>
+
+                               Sign On
+                                              
+                                              
+System . . . . . :   IBMI001                    Display  . . . . . :   DSP01
+Subsystem  . . . :   QINTER                     Library  . . . . . :   QSYS
+                                              
+                                              
+Type choices, press Enter.
+                                              
+User  . . . . . . . . . . . <input type="text" class="input-field" id="username" maxlength="10" style="width: 80px;">
+Password  . . . . . . . . . <input type="password" class="password-field" id="password" maxlength="10" style="width: 80px;">
+Program/procedure . . . . . 
+Menu  . . . . . . . . . . . 
+Current library . . . . . . 
+                                              
+                                              
+                                              
+                                              
+<span id="error-message" class="error hidden">
+CPF1107 - Password not correct for user profile.
+</span>
+                                              
+                                              
+                                              
+                                              
+                                              
+                                              
+                                              
+                                              
+                                              
+                                              
+                                              
+                                              
+                                              
+                                              
+Bottom
+F1=Help   F3=Exit   F12=Cancel
+            </div>
+            
+            <!-- Data Screen -->
+            <div id="data-screen" class="hidden">
+<div class="header">AS/400 - IBM i Operating System V7R4
+SYSTEM:  IBMI001    SUBSYSTEM: QINTER    DISPLAY: DSP01</div>
+
+                     Customer Financial Data
+                     CSTFIN001 - Confidential Access
+                                              
+User: <span id="logged-user"></span>                              Date: 08/02/25
+Library: CUSTLIB                                Time: 14:23:45
+                                              
+File . . . . . . . . . . . : CUSTCARD
+Member . . . . . . . . . . : ACTIVE
+                                              
+CUSTOMER ID    NAME               CARD NUMBER        EXP    CVV
+                                              
+CU001          JOHNSON, ROBERT    4532-1234-5678-9012 12/27  456
+CU002          SMITH, JENNIFER    5432-9876-5432-1098 03/28  789
+CU003          BROWN, MICHAEL     4111-1111-1111-1234 08/26  123
+CU004          DAVIS, SARAH       5555-5555-5555-4444 11/29  567
+CU005          WILSON, DAVID      4000-0000-0000-0002 01/27  890
+CU006          MARTINEZ, MARIA    3782-8224-6310-0058 05/28  234
+CU007          ANDERSON, JAMES    6011-1111-1111-1117 09/26  678
+CU008          TAYLOR, LISA       5105-1051-0510-5100 07/27  345
+                                              
+                                              
+                                              
+Bottom
+F3=Exit   F5=Refresh   F12=Return   F21=Print
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const loginScreen = document.getElementById('login-screen');
+        const dataScreen = document.getElementById('data-screen');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const errorMessage = document.getElementById('error-message');
+        const loggedUser = document.getElementById('logged-user');
+        
+        // Valid credentials
+        const validUsername = 'USER';
+        const validPassword = 'PASSWORD';
+        
+        // Focus on username field initially
+        usernameInput.focus();
+        
+        // Handle Enter key press
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                handleLogin();
+            }
+            
+            // Handle F3 key (Exit)
+            if (e.key === 'F3') {
+                if (!dataScreen.classList.contains('hidden')) {
+                    showLoginScreen();
+                }
+            }
+            
+            // Handle F12 key (Cancel/Return)
+            if (e.key === 'F12') {
+                if (!dataScreen.classList.contains('hidden')) {
+                    showLoginScreen();
+                }
+            }
+            
+            // Convert input to uppercase for username
+            if (e.target === usernameInput) {
+                setTimeout(() => {
+                    usernameInput.value = usernameInput.value.toUpperCase();
+                }, 0);
+            }
+        });
+        
+        function handleLogin() {
+            const username = usernameInput.value.trim().toUpperCase();
+            const password = passwordInput.value.trim().toUpperCase();
+            
+            if (username === validUsername && password === validPassword) {
+                // Successful login
+                loggedUser.textContent = username;
+                showDataScreen();
+            } else {
+                // Failed login
+                showError();
+                clearFields();
+            }
+        }
+        
+        function showError() {
+            errorMessage.classList.remove('hidden');
+            setTimeout(() => {
+                errorMessage.classList.add('hidden');
+            }, 3000);
+        }
+        
+        function clearFields() {
+            usernameInput.value = '';
+            passwordInput.value = '';
+            usernameInput.focus();
+        }
+        
+        function showLoginScreen() {
+            loginScreen.classList.remove('hidden');
+            dataScreen.classList.add('hidden');
+            clearFields();
+        }
+        
+        function showDataScreen() {
+            loginScreen.classList.add('hidden');
+            dataScreen.classList.remove('hidden');
+        }
+        
+        // Handle tab navigation between fields
+        usernameInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                passwordInput.focus();
+            }
+        });
+        
+        passwordInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Tab' && e.shiftKey) {
+                e.preventDefault();
+                usernameInput.focus();
+            }
+        });
+        
+        // Add subtle screen flicker effect
+        setInterval(() => {
+            const terminal = document.querySelector('.terminal');
+            terminal.style.filter = 'brightness(0.98)';
+            setTimeout(() => {
+                terminal.style.filter = 'brightness(1)';
+            }, 50);
+        }, 10000);
+    </script>
+</body>
+</html>

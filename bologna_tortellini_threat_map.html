@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bologna Tortellini Threat Assessment Map</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            margin: 0;
+            color: #e74c3c;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            font-size: 2.5em;
+        }
+        
+        .header p {
+            margin: 10px 0 0 0;
+            color: #666;
+            font-style: italic;
+        }
+        
+        .map-container {
+            position: relative;
+            height: 70vh;
+            margin: 20px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+        
+        .legend {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            z-index: 1000;
+            min-width: 200px;
+        }
+        
+        .legend h3 {
+            margin: 0 0 10px 0;
+            color: #e74c3c;
+            text-align: center;
+        }
+        
+        .threat-level {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+            padding: 5px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        
+        .threat-level:hover {
+            background-color: rgba(0,0,0,0.05);
+        }
+        
+        .threat-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .critical { background-color: #e74c3c; }
+        .high { background-color: #f39c12; }
+        .medium { background-color: #f1c40f; }
+        .low { background-color: #2ecc71; }
+        
+        .stats {
+            background: rgba(255, 255, 255, 0.95);
+            margin: 20px;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .stat-card {
+            text-align: center;
+            padding: 15px;
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+        
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            display: block;
+        }
+        
+        .leaflet-popup-content {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .popup-title {
+            font-weight: bold;
+            color: #e74c3c;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+        
+        .threat-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 15px;
+            color: white;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        
+        .popup-description {
+            margin: 10px 0;
+            line-height: 1.4;
+        }
+        
+        .popup-warning {
+            background: rgba(231, 76, 60, 0.1);
+            padding: 8px;
+            border-radius: 5px;
+            border-left: 3px solid #e74c3c;
+            margin-top: 10px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🍝 Bologna Tortellini Threat Assessment Map 🚨</h1>
+        <p>"Mapping the delicious dangers lurking in every bowl"</p>
+    </div>
+    
+    <div class="map-container">
+        <div id="map"></div>
+        <div class="legend">
+            <h3>Threat Levels</h3>
+            <div class="threat-level">
+                <div class="threat-icon critical"></div>
+                <span><strong>Critical:</strong> Irresistible</span>
+            </div>
+            <div class="threat-level">
+                <div class="threat-icon high"></div>
+                <span><strong>High:</strong> Highly Addictive</span>
+            </div>
+            <div class="threat-level">
+                <div class="threat-icon medium"></div>
+                <span><strong>Medium:</strong> Moderately Tempting</span>
+            </div>
+            <div class="threat-level">
+                <div class="threat-icon low"></div>
+                <span><strong>Low:</strong> Safe for Beginners</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="stats">
+        <div class="stat-card">
+            <span class="stat-number" id="totalThreats">0</span>
+            <span>Total Threats Identified</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-number" id="criticalThreats">0</span>
+            <span>Critical Threat Zones</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-number" id="avgThreat">0</span>
+            <span>Avg. Deliciousness Rating</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-number" id="casualties">∞</span>
+            <span>Happy Customers</span>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script>
+        // Initialize map centered on Bologna
+        const map = L.map('map').setView([44.4949, 11.3426], 14);
+        
+        // Add tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+        
+        // Tortellini restaurants with threat assessments
+        const tortelliniThreats = [
+            {
+                name: "Osteria del Sole",
+                coords: [44.4947, 11.3462],
+                threat: "critical",
+                rating: 9.8,
+                description: "Historic tavern serving legendary tortellini",
+                risks: ["Extreme nostalgia", "Uncontrollable urge to move to Bologna", "Spontaneous Italian accent development"],
+                warning: "⚠️ May cause immediate booking of return flights"
+            },
+            {
+                name: "Trattoria Anna Maria",
+                coords: [44.4935, 11.3448],
+                threat: "critical",
+                rating: 9.6,
+                description: "Family-run institution with handmade perfection",
+                risks: ["Emotional attachment to the nonna", "Inability to eat pasta elsewhere", "Tearful goodbyes"],
+                warning: "⚠️ Staff may adopt you as family member"
+            },
+            {
+                name: "Da Nello",
+                coords: [44.4958, 11.3441],
+                threat: "high",
+                rating: 9.2,
+                description: "Traditional recipes passed down through generations",
+                risks: ["Time distortion (hours feel like minutes)", "Wallet lightening", "Belt loosening"],
+                warning: "⚠️ May require emergency pants unbuttoning"
+            },
+            {
+                name: "Il Rovescio",
+                coords: [44.492, 11.3515],
+                threat: "high",
+                rating: 8.9,
+                description: "Modern twist on classic tortellini",
+                risks: ["Instagram addiction", "Foodie superiority complex", "Plate licking tendency"],
+                warning: "⚠️ Photos may not do justice to actual experience"
+            },
+            {
+                name: "Osteria Broccaindosso",
+                coords: [44.4889, 11.3543],
+                threat: "medium",
+                rating: 8.5,
+                description: "Cozy spot with excellent tortellini en brodo",
+                risks: ["Soup slurping loudly", "Excessive complimenting of chef", "Menu memorization"],
+                warning: "⚠️ May develop irrational fear of other soups"
+            },
+            {
+                name: "Trattoria Gigina",
+                coords: [44.4912, 11.3381],
+                threat: "medium",
+                rating: 8.3,
+                description: "Hidden gem with authentic homestyle cooking",
+                risks: ["Difficulty finding again", "Telling everyone about 'secret' spot", "Gatekeeping behavior"],
+                warning: "⚠️ You'll pretend you discovered this place"
+            },
+            {
+                name: "Ristorante Pappagallo",
+                coords: [44.4963, 11.3419],
+                threat: "high",
+                rating: 9.1,
+                description: "Upscale dining with elevated tortellini",
+                risks: ["Refined palate development", "Champagne expectations", "Fancy vocabulary acquisition"],
+                warning: "⚠️ May develop unexplained urge to wear scarves"
+            },
+            {
+                name: "Trattoria del Rosso",
+                coords: [44.4879, 11.3467],
+                threat: "medium",
+                rating: 8.1,
+                description: "University area favorite with hearty portions",
+                risks: ["Student lifestyle envy", "Academic productivity decline", "Carb loading"],
+                warning: "⚠️ May cause spontaneous enrollment in Italian classes"
+            },
+            {
+                name: "Al Cambio",
+                coords: [44.4978, 11.3398],
+                threat: "low",
+                rating: 7.8,
+                description: "Reliable spot for consistent tortellini",
+                risks: ["Mild satisfaction", "Reasonable expectations met", "Normal dining experience"],
+                warning: "⚠️ Surprisingly safe choice for tortellini beginners"
+            },
+            {
+                name: "Osteria al 15",
+                coords: [44.4904, 11.3523],
+                threat: "critical",
+                rating: 9.7,
+                description: "Intimate setting with perfect tortellini execution",
+                risks: ["Romantic dinner escalation", "Proposal planning", "Life-changing decisions"],
+                warning: "⚠️ Multiple marriage proposals have occurred here"
+            }
+        ];
+        
+        // Color mapping for threat levels
+        const threatColors = {
+            critical: '#e74c3c',
+            high: '#f39c12',
+            medium: '#f1c40f',
+            low: '#2ecc71'
+        };
+        
+        // Add markers to map
+        let totalThreats = 0;
+        let criticalCount = 0;
+        let totalRating = 0;
+        
+        tortelliniThreats.forEach(restaurant => {
+            const color = threatColors[restaurant.threat];
+            
+            // Create custom icon
+            const icon = L.divIcon({
+                className: 'custom-div-icon',
+                html: `<div style="background-color: ${color}; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 3px 10px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 12px;">🍝</div>`,
+                iconSize: [26, 26],
+                iconAnchor: [13, 13]
+            });
+            
+            // Create popup content
+            const popupContent = `
+                <div class="popup-title">${restaurant.name}</div>
+                <div class="threat-badge" style="background-color: ${color};">
+                    ${restaurant.threat.toUpperCase()} THREAT
+                </div>
+                <div style="margin: 5px 0;"><strong>Deliciousness Rating:</strong> ${restaurant.rating}/10</div>
+                <div class="popup-description">${restaurant.description}</div>
+                <div><strong>Identified Risks:</strong></div>
+                <ul style="margin: 5px 0; padding-left: 20px;">
+                    ${restaurant.risks.map(risk => `<li>${risk}</li>`).join('')}
+                </ul>
+                <div class="popup-warning">${restaurant.warning}</div>
+            `;
+            
+            // Add marker
+            L.marker(restaurant.coords, { icon: icon })
+                .addTo(map)
+                .bindPopup(popupContent, { maxWidth: 300 });
+            
+            // Update statistics
+            totalThreats++;
+            if (restaurant.threat === 'critical') criticalCount++;
+            totalRating += restaurant.rating;
+        });
+        
+        // Update statistics display
+        document.getElementById('totalThreats').textContent = totalThreats;
+        document.getElementById('criticalThreats').textContent = criticalCount;
+        document.getElementById('avgThreat').textContent = (totalRating / totalThreats).toFixed(1);
+        
+        // Add some fun interactions
+        map.on('click', function(e) {
+            L.popup()
+                .setLatLng(e.latlng)
+                .setContent(`
+                    <div style="text-align: center;">
+                        <strong>🕵️ Threat Assessment Complete</strong><br>
+                        <em>No tortellini detected at this location</em><br>
+                        <small>Coordinates: ${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}</small><br>
+                        <div style="margin-top: 10px; padding: 5px; background: rgba(46, 204, 113, 0.1); border-radius: 3px;">
+                            ✅ Area marked as SAFE
+                        </div>
+                    </div>
+                `)
+                .openOn(map);
+        });
+        
+        // Add a pulsing effect to critical threats
+        setTimeout(() => {
+            document.querySelectorAll('.leaflet-marker-icon').forEach((marker, index) => {
+                if (tortelliniThreats[index] && tortelliniThreats[index].threat === 'critical') {
+                    marker.style.animation = 'pulse 2s infinite';
+                }
+            });
+        }, 1000);
+        
+        // Add CSS animation for pulsing
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes pulse {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.1); }
+                100% { transform: scale(1); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
