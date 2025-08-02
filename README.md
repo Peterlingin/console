@@ -44,3 +44,38 @@ The Hacker Terminal is a first stab at recreating those flashy “hacking scenes
 
 Still, it looks cool. Like the other fake consoles shared here, it’s perfect for running in a browser kiosk-mode on a second monitor at the office. Great for impressing visitors—especially the clueless ones.
 
+---
+
+**The AS/400 5250 Terminal**
+
+A highly realistic AS/400 5250 terminal emulator that captures the authentic look and feel of IBM's classic green-screen interface. Here are the key features:
+
+Authentic Design Elements:
+- Classic green-on-black color scheme with scan lines effect
+- IBM Plex Mono font (IBM's official font) for maximum authenticity
+- Proper AS/400 screen layout with system information headers
+- Realistic function key labels (F1=Help, F3=Exit, F12=Cancel, etc.)
+- Proper AS/400 system naming (IBMI001, QINTER subsystem)
+- Subtle screen flicker effect for CRT monitor simulation
+- Tab navigation between fields
+
+Functionality:
+- Login: Use 'user' and 'password' (case-insensitive)
+- Error Handling: Displays the authentic CPF1107 error message for incorrect credentials
+- Success: Shows a realistic customer financial data screen with fake credit card information
+- Navigation: F3 or F12 keys return to login screen 
+
+The terminal behaves exactly like a real AS/400 system would, complete with proper error messages and screen transitions. The fake credit card data is clearly fictional and formatted in the style typical of AS/400 business applications.
+
+---
+
+**The Bologna Tortellini Threat Assessment Map**
+
+The Bologna Tortellini Threat Assessment Map helps tortellini lovers in Bologna resist the urge to grab a plate (or five). These delicious little calorie bombs are loaded with fat—and serious belly risk.
+
+The map even highlights “de-tortellinized” zones where you're safe from temptation.
+
+Just for laughs, of course—tortellini are amazing. No judgment.
+
+---
+
