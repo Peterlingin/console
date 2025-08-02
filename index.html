@@ -226,35 +226,5 @@
         </div>
     </div>
     
-    <script>
-        // Add some dynamic terminal effects
-        document.addEventListener('DOMContentLoaded', function() {
-            const links = document.querySelectorAll('a');
-            
-            links.forEach(link => {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const originalText = this.textContent;
-                    this.textContent = '[FILE_NOT_FOUND]';
-                    this.style.color = '#ff0000';
-                    
-                    setTimeout(() => {
-                        this.textContent = originalText;
-                        this.style.color = '#00dd00';
-                    }, 1500);
-                });
-            });
-            
-            // Random glitch effect
-            setInterval(() => {
-                if (Math.random() > 0.95) {
-                    document.body.style.filter = 'hue-rotate(10deg)';
-                    setTimeout(() => {
-                        document.body.style.filter = 'none';
-                    }, 100);
-                }
-            }, 1000);
-        });
-    </script>
 </body>
 </html>
