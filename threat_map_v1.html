@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Threat Monitoring System</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: radial-gradient(ellipse at center, #001a00 0%, #000000 70%);
+            color: #00ff41;
+            font-family: 'Orbitron', monospace;
+            overflow: hidden;
+            cursor: crosshair;
+            animation: subtle-pulse 4s ease-in-out infinite;
+        }
+        
+        @keyframes subtle-pulse {
+            0%, 100% { background: radial-gradient(ellipse at center, #001a00 0%, #000000 70%); }
+            50% { background: radial-gradient(ellipse at center, #002200 0%, #000000 70%); }
+        }
+        
+        .container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            background: radial-gradient(ellipse at center, #001100 0%, #000000 100%);
+        }
+        
+        .header {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            text-align: center;
+        }
+        
+        .title {
+            font-size: 28px;
+            font-weight: 900;
+            color: #00ff41;
+            text-shadow: 0 0 20px #00ff41, 0 0 40px #00ff41;
+            margin-bottom: 5px;
+            letter-spacing: 2px;
+            animation: title-glow 3s ease-in-out infinite;
+        }
+        
+        @keyframes title-glow {
+            0%, 100% { text-shadow: 0 0 20px #00ff41, 0 0 40px #00ff41; }
+            50% { text-shadow: 0 0 30px #00ff41, 0 0 60px #00ff41, 0 0 80px #00ff41; }
+        }
+        
+        .subtitle {
+            font-size: 14px;
+            color: #888;
+            letter-spacing: 1px;
+        }
+        
+        .map-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 900px;
+            height: 450px;
+            background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOTAwIiBoZWlnaHQ9IjQ1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZGVmcz4KICAgIDxwYXR0ZXJuIGlkPSJncmlkIiB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiPgogICAgICA8cGF0aCBkPSJNIDIwIDAgTCAwIDAgMCAyMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAzMzAwIiBzdHJva2Utd2lkdGg9IjAuNSIvPgogICAgPC9wYXR0ZXJuPgogIDwvZGVmcz4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+Cjwvc3ZnPg==') no-repeat center;
+            background-size: cover;
+            border: 2px solid #00ff41;
+            border-radius: 5px;
+            box-shadow: 0 0 30px #00ff41, inset 0 0 30px rgba(0, 255, 65, 0.1);
+            animation: map-border-pulse 2s ease-in-out infinite;
+            backdrop-filter: blur(1px);
+        }
+        
+        @keyframes map-border-pulse {
+            0%, 100% { box-shadow: 0 0 30px #00ff41, inset 0 0 30px rgba(0, 255, 65, 0.1); }
+            50% { box-shadow: 0 0 50px #00ff41, inset 0 0 50px rgba(0, 255, 65, 0.2); }
+        }
+        
+        .world-map {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOTAwIiBoZWlnaHQ9IjQ1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8IS0tIERldGFpbGVkIHdvcmxkIG1hcCAtLT4KICA8IS0tIE5vcnRoIEFtZXJpY2EgLS0+CiAgPHBhdGggZD0iTSAxMjAgMjQwIEwgMTEwIDIzMCBMIDk1IDIyNSBMIDg1IDIxNSBMIDgwIDIwMCBMIDg1IDE4NSBMIDkwIDE3MCBMIDQ1IDEzNSBMIDUwIDEyMCBMIDY1IDExMCBMIDg1IDEwNSBMIDEwNSAxMDANICBMIDEyNSAxMDUgTCAxNDUgMTEwIEwgMTY1IDEyMCBMIDE4NSAxMzUgTCAyMDAgMTUwIEMgMjIwIDE1NSAyNDAgMTY1IDI2MCAyMDAgTCAyNzAgMjEwIEwgMjYwIDIyNSBMIDI0MCAyMzAgTCAyMTAgMjM1IEwgMTgwIDI0MCBMIDEyMCAyNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwNjYwMCIgc3Ryb2tlLXdpZHRoPSIyIi8+CiAgPCEtLSBHcmVlbmxhbmQgLS0+CiAgPHBhdGggZD0iTSAyNTAgODAgTCAyODAgNzUgTCAzMDAgOTAgTCAyOTUgMTE1IEwgMjc1IDEyNSBMIDI1NSAxMDUgWiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDA2NjAwIiBzdHJva2Utd2lkdGg9IjIiLz4KICA8IS0tIE1leGljby9DZW50cmFsIEFtZXJpY2EgLS0+CiAgPHBhdGggZD0iTSAxMjAgMjQwIEwgMTMwIDI1NSBMIDEzNSAyNzAgTCAxNDAgMjc1IEwgMTU1IDI4MCBMIDE2NCAyNzUgTCAxNzAgMjY1IEwgMTc1IDI2MCBMIDE4NCAyNTgiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwNjYwMCIgc3Ryb2tlLXdpZHRoPSIyIi8+CiAgPCEtLSBTb3V0aCBBbWVyaWNhIC0tPgogIDxwYXRoIGQ9Ik0gMTc2IDI2NSBMIDE4OCAyODAgTCAxOTUgMzAwIEwgMjAwIDMyMCBMIDIwNSAzNDAgTCAyMTAgMzYwIEwgMjE1IDM4MCBMIDIwNSAzOTAgTCAxOTUgMzk1IEwgMTg1IDM5MCBMIDE3NSAzODAgTCAxNzAgMzYwIEwgMTc1IDM0MCBMIDE4MCAzMjAgTCAxNzYgMjY1IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDY2MDAiIHN0cm9rZS13aWR0aD0iMiIvPgogIDwhLS0gQnJhemlsIC0tPgogIDxwYXRoIGQ9Ik0gMjE1IDMwMCBMIDI0MCAyOTUgTCAyNTUgMzA1IEwgMjYwIDMyMCBMIDI1NSAzMzUgTCAyNDUgMzQ1IEwgMjM1IDM0MCBMIDIyNSAzMzAgTCAyMTUgMzAwIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDY2MDAiIHN0cm9rZS13aWR0aD0iMiIvPgogIDwhLS0gRXVyb3BlIC0tPgogIDxwYXRoIGQ9Ik0gMzc1IDE0MCBMIDM4NSAxMzAgTCA0MDAgMTI1IEwgNDE1IDEzMCBMIDQzMCAxMzUgTCA0NDAgMTQ1IEwgNDQ1IDE2MCBMIDQ0MCAxNzUgTCA0MzAgMTg1IEwgNDE1IDE5MCBMIDM5NSAxOTUgTCAzODAyMTkwIEwgMzY1IDE4NSBMIDM2MDE3NSBMIDMwNTEzNUwgMzc1IDE0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDA2NjAwIiBzdHJva2Utd2lkdGg9IjIiLz4KICA8IS0tIEFmcmljYSAtLT4KICA8cGF0aCBkPSJNIDM4NSAyMDAgTCA0MDAgMjEwIEwgNDIwIDIyNSBMIDQzNSAyNDUgTCA0NDUgMjcwIEwgNDUwIDI5NSBMIDQ0NSAzMjAgTCA0MzAgMzQwIEwgNDEwIDM1NSBJIM4NzAgMzYwIEwgMzU1IDM1MCBMIDM0NSAzMzAgTCAzNDUgMzAwIEwgMzQ4IDI4MCBMIDM2MCAyNzAgTCAzNzAgMjUwIEwgMzc1IDI0MCBMIDM4MCAyMjAgTCAzODUgMjAwIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDY2MDAiIHN0cm9rZS13aWR0aD0iMiIvPgogIDwhLS0gQXNpYSAtLT4KICA8IS0tIE1pZGRsZSBFYXN0IC0tPgogIDxwYXRoIGQ9Ik0gNDQ1IDE3NSBMIDQ2NSAxODAgTCA0ODUgMTg1IEwgNTA1IDE5NSBMIDUxNSAyMDUgTCA1MjAgMjIwIEwgNTEwIDIzNSBMIDQ5NTI0MFEgNDcwIDIzNSBMIDQ1MCAyMjAgTCA0NDUgMjAwIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDY2MDAiIHN0cm9rZS13aWR0aD0iMiIvPgogIDwhLS0gUnVzc2lhIC0tPgogIDxwYXRoIGQ9Ik0gNDc1IDEyMCBMIDUwNSAxMTUgTCA1MzUgMTEwIEwgNTY1IDEwNSBMIDYwMCAxMTAgTCA2MzUgMTE1IEwgNjY1IDEyMCBMIDY5NSAxMjUgTCA3MjUgMTMwIEwgNzQ1IDEzNSBMIDc1NSAxNDUgTCA3NTAgMTYwIEwgNzQwIDE3NSBMIDcyNSAxODUgTCA3MDAgMTkwIEwgNjcwIDE5NSBMIDY0MCAyMDAgTCA2MTAgMTk1IEwgNTgwIDE4MCBMIDU1MDE2NSBMIDUxNSAxNTAgTCA0ODUgMTQwIEwgNDc1IDEyMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDA2NjAwIiBzdHJva2Utd2lkdGg9IjIiLz4KICA8IS0tIENoaW5hIC0tPgogIDxwYXRoIGQ9Ik0gNjEwIDIwMCBMIDY0MCAyMDUgTCA2NzAgMjEwIEwgNjkwIDIyNSBMIDcwNSAyNDAgTCA3MTAgMjYwIEwgNzAwIDI3NSBMIDY4MCAyODAgTCA2NTUgMjc1IEwgNjMwIDI2MCBMIDE3MCAyNDAgTCA2MTAgMjE1IEwgNjEwIDIwMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDA2NjAwIiBzdHJva2Utd2lkdGg9IjIiLz4KICA8IS0tIEluZGlhIC0tPgogIDxwYXRoIGQ9Ik0gNTIwIDI0MCBMIDQ0MCAyNDUgTCA1NjUgMjUwIEwgNTg1IDI3MCBMIDU5NTI5MCBMIDA3NTMxNUwgNTUwIDMyMCBMIDUzNSAzMTBMIDUyMCAyODAgTCA1MTUgMjY1IEwgNTIwIDI0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDA2NjAwIiBzdHJva2Utd2lkdGg9IjIiLz4KICA8IS0tIFNvdXRoZWFzdCBBc2lhIC0tPgogIDxwYXRoIGQ9Ik0gNTk1IDMyMCBMIDYyMCAzMzAgTCA2NDAgMzQ1IEwgNjM1IDM2NSBMIDYyNSAzNzUgTCA2MDUgMzc4IEwgNTg1IDM3MCBMIDU3NyAzNTAgTCA1ODUgMzMwIEwgNTk1IDMyMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDA2NjAwIiBzdHJva2Utd2lkdGg9IjIiLz4KICA8IS0tIEluZG9uZXNpYSAtLT4KICA8Y2lyY2xlIGN4PSI2NzAiIGN5PSIzNjAiIHI9IjMiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwNjYwMCIgc3Ryb2tlLXdpZHRoPSIyIi8+CiAgPGNpcmNsZSBjeD0iNjk1IiBjeT0iMzY1IiByPSIzIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDY2MDAiIHN0cm9rZS13aWR0aD0iMiIvPgogIDxjaXJjbGUgY3g9IjcxNSIgY3k9IjM1NSIgcj0iNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDA2NjAwIiBzdHJva2Utd2lkdGg9IjIiLz4KICA8IS0tIEphcGFuIC0tPgogIDxwYXRoIGQ9Ik0gNzUwIDE5MCBMIDY1IDE4NSBMIDc3NyAyMDBMIDc4MCAyMTUgTCA3NzggMjMwIEwgNzcwIDI0MiBMIDc2MiAyNDAgTCA3NTggMjI1IEwgNzU1IDIxMCBMIDc1MCAxOTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwNjYwMCIgc3Ryb2tlLXdpZHRoPSIyIi8+CiAgPCEtLSBBdXN0cmFsaWEgLS0+CiAgPHBhdGggZD0iTSA2NTAgNDAyIEwgNjg5NDA1IFKnNzIgNDA4IEwgNzU1IDQxNUwgNzgwIDQyMEwgNzk1IDQxNUwgNzk4IDM5OCBMIDI5NSAzODMgTCA3ODAgMzc4IEwgNzYwIDM4MCBMIDc0MDMzOCBMIDcyMCAzODUgTCA3MDAzOTAgTCA2ODAgMzk1IEwgNjUwIDQwMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDA2NjAwIiBzdHJva2Utd2lkdGg9IjIiLz4KICA8IS0tIE5ldyBaZWFsYW5kIC0tPgogIDxjaXJjbGUgY3g9IjgxNSIgY3k9IjQzNSIgcj0iNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDA2NjAwIiBzdHJva2Utd2lkdGg9IjIiLz4KICA8Y2lyY2xlIGN4PSI4MjIiIGN5PSI0NDUiIHI9IjMiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwNjYwMCIgc3Ryb2tlLXdpZHRoPSIyIi8+CiAgPCEtLSBHcmlkIGxpbmVzIC0tPgogIDxkZWZzPgogICAgPHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+CiAgICAgIDxwYXRoIGQ9Ik0gNDAgMCBMIDAgMCAwIDQwIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDMzMDAiIHN0cm9rZS13aWR0aD0iMC41IiBvcGFjaXR5PSIwLjUiLz4KICAgIDwvcGF0dGVybj4KICA8L2RlZnM+CiAgPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPgo8L3N2Zz4=') no-repeat center;
+            background-size: cover;
+        }
+        
+        .attack-line {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(90deg, #ff0000, #ff6600, #ffff00);
+            box-shadow: 0 0 15px #ff0000, 0 0 30px rgba(255, 0, 0, 0.5);
+            transform-origin: left center;
+            animation: attack-pulse 0.8s ease-out;
+        }
+        
+        @keyframes attack-pulse {
+            0% { 
+                width: 0; 
+                opacity: 1; 
+                filter: brightness(2);
+                box-shadow: 0 0 15px #ff0000, 0 0 30px rgba(255, 0, 0, 0.8);
+            }
+            50% {
+                filter: brightness(1.5);
+                box-shadow: 0 0 20px #ff0000, 0 0 40px rgba(255, 0, 0, 0.6);
+            }
+            100% { 
+                width: 100%; 
+                opacity: 0; 
+                filter: brightness(1);
+                box-shadow: 0 0 10px #ff0000, 0 0 20px rgba(255, 0, 0, 0.3);
+            }
+        }
+        
+        .city {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: radial-gradient(circle, #00ff41, #00aa2a);
+            border-radius: 50%;
+            box-shadow: 0 0 15px #00ff41, 0 0 30px rgba(0, 255, 65, 0.5);
+            animation: city-pulse 2s infinite;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .city:hover {
+            transform: scale(1.5);
+            box-shadow: 0 0 25px #00ff41, 0 0 50px rgba(0, 255, 65, 0.8);
+        }
+        
+        .city.under-attack {
+            animation: city-alert 0.5s ease-in-out infinite;
+            background: radial-gradient(circle, #ff0000, #aa0000);
+            box-shadow: 0 0 20px #ff0000, 0 0 40px rgba(255, 0, 0, 0.8);
+        }
+        
+        @keyframes city-pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0.8; }
+        }
+        
+        @keyframes city-alert {
+            0%, 100% { transform: scale(1.2); }
+            50% { transform: scale(1.5); }
+        }
+        
+        .stats-panel {
+            position: absolute;
+            top: 100px;
+            left: 20px;
+            width: 300px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #00ff41;
+            border-radius: 5px;
+            padding: 15px;
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.3);
+        }
+        
+        .stats-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #00ff41;
+            text-align: center;
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+        
+        .stat-label {
+            color: #888;
+        }
+        
+        .stat-value {
+            color: #00ff41;
+            font-weight: 700;
+        }
+        
+        .threat-level {
+            position: absolute;
+            top: 100px;
+            right: 20px;
+            width: 200px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #ff0000;
+            border-radius: 5px;
+            padding: 15px;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.3);
+        }
+        
+        .threat-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #ff0000;
+            text-align: center;
+        }
+        
+        .threat-meter {
+            width: 100%;
+            height: 20px;
+            background: #333;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        
+        .threat-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ffff00, #ff6600, #ff0000);
+            transition: width 0.5s ease;
+            border-radius: 10px;
+        }
+        
+        .log-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            height: 120px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid #00ff41;
+            border-radius: 5px;
+            padding: 10px;
+            overflow-y: auto;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+        
+        .log-entry {
+            margin-bottom: 3px;
+            animation: log-fade-in 0.5s ease;
+        }
+        
+        @keyframes log-fade-in {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        
+        .timestamp {
+            color: #666;
+        }
+        
+        .log-warning {
+            color: #ffaa00;
+        }
+        
+        .log-critical {
+            color: #ff0000;
+        }
+        
+        .log-info {
+            color: #00ff41;
+        }
+        
+        .coordinates {
+            position: absolute;
+            bottom: 150px;
+            right: 20px;
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .scanner-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: linear-gradient(0deg, 
+                transparent 0%, 
+                rgba(0, 255, 65, 0.3) 20%, 
+                #00ff41 50%, 
+                rgba(0, 255, 65, 0.3) 80%, 
+                transparent 100%);
+            animation: scanner 6s linear infinite;
+            box-shadow: 0 0 10px #00ff41;
+        }
+        
+        @keyframes scanner {
+            0% { left: -3px; opacity: 1; }
+            95% { opacity: 1; }
+            100% { left: 100%; opacity: 0; }
+        }
+        
+        .radar-sweep {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 200px;
+            height: 200px;
+            border: 2px solid rgba(0, 255, 65, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            animation: radar-pulse 4s ease-in-out infinite;
+        }
+        
+        @keyframes radar-pulse {
+            0% { 
+                width: 200px; 
+                height: 200px; 
+                opacity: 0.8;
+                border-color: rgba(0, 255, 65, 0.8);
+            }
+            100% { 
+                width: 800px; 
+                height: 800px; 
+                opacity: 0;
+                border-color: rgba(0, 255, 65, 0.1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">GLOBAL THREAT MONITORING SYSTEM</div>
+            <div class="subtitle">DEFCON-3 • REAL-TIME ANALYSIS</div>
+        </div>
+        
+        <div class="map-container">
+            <div class="world-map" id="worldMap">
+                <div class="scanner-line"></div>
+                <div class="radar-sweep"></div>
+                <div class="radar-sweep" style="animation-delay: 2s;"></div>
+            </div>
+        </div>
+        
+        <div class="stats-panel">
+            <div class="stats-title">NETWORK STATISTICS</div>
+            <div class="stat-row">
+                <span class="stat-label">Active Threats:</span>
+                <span class="stat-value" id="activeThreats">0</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Blocked Attacks:</span>
+                <span class="stat-value" id="blockedAttacks">0</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Data Packets:</span>
+                <span class="stat-value" id="dataPackets">0</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Response Time:</span>
+                <span class="stat-value" id="responseTime">0ms</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Uptime:</span>
+                <span class="stat-value" id="uptime">00:00:00</span>
+            </div>
+        </div>
+        
+        <div class="threat-level">
+            <div class="threat-title">THREAT LEVEL</div>
+            <div class="threat-meter">
+                <div class="threat-fill" id="threatFill" style="width: 60%;"></div>
+            </div>
+            <div style="text-align: center; color: #ff6600; font-weight: 700;" id="threatText">ELEVATED</div>
+        </div>
+        
+        <div class="coordinates" id="coordinates">
+            LAT: 40.7128° LON: -74.0060°
+        </div>
+        
+        <div class="log-panel" id="logPanel"></div>
+    </div>
+
+    <script>
+        class ThreatMonitor {
+            constructor() {
+                this.cities = [
+                    {name: 'New York', x: 180, y: 200, lat: 40.7128, lon: -74.0060},
+                    {name: 'Los Angeles', x: 120, y: 225, lat: 34.0522, lon: -118.2437},
+                    {name: 'Toronto', x: 190, y: 185, lat: 43.6532, lon: -79.3832},
+                    {name: 'Mexico City', x: 145, y: 250, lat: 19.4326, lon: -99.1332},
+                    {name: 'London', x: 395, y: 160, lat: 51.5074, lon: -0.1278},
+                    {name: 'Paris', x: 410, y: 170, lat: 48.8566, lon: 2.3522},
+                    {name: 'Berlin', x: 425, y: 155, lat: 52.5200, lon: 13.4050},
+                    {name: 'Moscow', x: 500, y: 140, lat: 55.7558, lon: 37.6176},
+                    {name: 'Tokyo', x: 760, y: 215, lat: 35.6762, lon: 139.6503},
+                    {name: 'Beijing', x: 680, y: 190, lat: 39.9042, lon: 116.4074},
+                    {name: 'Shanghai', x: 700, y: 210, lat: 31.2304, lon: 121.4737},
+                    {name: 'Seoul', x: 720, y: 190, lat: 37.5665, lon: 126.9780},
+                    {name: 'Mumbai', x: 570, y: 260, lat: 19.0760, lon: 72.8777},
+                    {name: 'Dubai', x: 510, y: 215, lat: 25.2048, lon: 55.2708},
+                    {name: 'Sydney', x: 750, y: 390, lat: -33.8688, lon: 151.2093},
+                    {name: 'Singapore', x: 650, y: 340, lat: 1.3521, lon: 103.8198},
+                    {name: 'São Paulo', x: 220, y: 330, lat: -23.5505, lon: -46.6333},
+                    {name: 'Rio de Janeiro', x: 240, y: 320, lat: -22.9068, lon: -43.1729},
+                    {name: 'Cairo', x: 445, y: 230, lat: 30.0444, lon: 31.2357},
+                    {name: 'Cape Town', x: 420, y: 360, lat: -33.9249, lon: 18.4241}
+                ];
+                
+                this.stats = {
+                    activeThreats: 0,
+                    blockedAttacks: 0,
+                    dataPackets: 0,
+                    responseTime: 0,
+                    startTime: Date.now()
+                };
+                
+                this.threatLevel = 60;
+                this.logEntries = [];
+                
+                this.init();
+            }
+            
+            init() {
+                this.createCities();
+                this.startMonitoring();
+                this.updateStats();
+                this.updateCoordinates();
+            }
+            
+            createCities() {
+                const map = document.getElementById('worldMap');
+                this.cities.forEach(city => {
+                    const cityElement = document.createElement('div');
+                    cityElement.className = 'city';
+                    cityElement.style.left = city.x + 'px';
+                    cityElement.style.top = city.y + 'px';
+                    cityElement.title = city.name;
+                    map.appendChild(cityElement);
+                });
+            }
+            
+            startMonitoring() {
+                setInterval(() => {
+                    this.simulateAttack();
+                }, Math.random() * 3000 + 1000);
+                
+                setInterval(() => {
+                    this.updateThreatLevel();
+                }, 5000);
+                
+                setInterval(() => {
+                    this.cleanupOldAttacks();
+                }, 1000);
+            }
+            
+            simulateAttack() {
+                const sourceCity = this.cities[Math.floor(Math.random() * this.cities.length)];
+                const targetCity = this.cities[Math.floor(Math.random() * this.cities.length)];
+                
+                if (sourceCity === targetCity) return;
+                
+                this.createAttackLine(sourceCity, targetCity);
+                this.logAttack(sourceCity, targetCity);
+                this.updateAttackStats();
+            }
+            
+            createAttackLine(source, target) {
+                const map = document.getElementById('worldMap');
+                const line = document.createElement('div');
+                line.className = 'attack-line';
+                
+                const dx = target.x - source.x;
+                const dy = target.y - source.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                
+                line.style.left = source.x + 'px';
+                line.style.top = source.y + 'px';
+                line.style.width = distance + 'px';
+                line.style.transform = `rotate(${angle}deg)`;
+                
+                // Add attack particles
+                this.createAttackParticles(source, target);
+                
+                // Make target city flash red
+                const targetCity = document.querySelector(`[title="${target.name}"]`);
+                if (targetCity) {
+                    targetCity.classList.add('under-attack');
+                    setTimeout(() => {
+                        targetCity.classList.remove('under-attack');
+                    }, 1000);
+                }
+                
+                map.appendChild(line);
+                
+                setTimeout(() => {
+                    if (line.parentNode) {
+                        line.parentNode.removeChild(line);
+                    }
+                }, 800);
+            }
+            
+            createAttackParticles(source, target) {
+                const map = document.getElementById('worldMap');
+                const particleCount = 8;
+                
+                for (let i = 0; i < particleCount; i++) {
+                    setTimeout(() => {
+                        const particle = document.createElement('div');
+                        particle.style.position = 'absolute';
+                        particle.style.width = '3px';
+                        particle.style.height = '3px';
+                        particle.style.background = '#ffff00';
+                        particle.style.borderRadius = '50%';
+                        particle.style.boxShadow = '0 0 8px #ffff00';
+                        particle.style.left = source.x + 'px';
+                        particle.style.top = source.y + 'px';
+                        particle.style.transition = 'all 0.6s ease-out';
+                        particle.style.zIndex = '1000';
+                        
+                        map.appendChild(particle);
+                        
+                        setTimeout(() => {
+                            particle.style.left = target.x + (Math.random() - 0.5) * 20 + 'px';
+                            particle.style.top = target.y + (Math.random() - 0.5) * 20 + 'px';
+                            particle.style.opacity = '0';
+                            particle.style.transform = 'scale(0)';
+                        }, 50);
+                        
+                        setTimeout(() => {
+                            if (particle.parentNode) {
+                                particle.parentNode.removeChild(particle);
+                            }
+                        }, 650);
+                    }, i * 80);
+                }
+            }
+            
+            logAttack(source, target) {
+                const timestamp = new Date().toLocaleTimeString();
+                const attackTypes = ['DDoS', 'Malware', 'Intrusion', 'Scan', 'Exploit'];
+                const attackType = attackTypes[Math.floor(Math.random() * attackTypes.length)];
+                const severity = Math.random() > 0.7 ? 'CRITICAL' : Math.random() > 0.4 ? 'WARNING' : 'INFO';
+                
+                let logClass = 'log-info';
+                if (severity === 'WARNING') logClass = 'log-warning';
+                if (severity === 'CRITICAL') logClass = 'log-critical';
+                
+                const entry = `<span class="timestamp">[${timestamp}]</span> <span class="${logClass}">${severity}: ${attackType} attack from ${source.name} to ${target.name}</span>`;
+                
+                this.logEntries.unshift(entry);
+                if (this.logEntries.length > 20) {
+                    this.logEntries.pop();
+                }
+                
+                this.updateLogPanel();
+            }
+            
+            updateLogPanel() {
+                const logPanel = document.getElementById('logPanel');
+                logPanel.innerHTML = this.logEntries.map(entry => 
+                    `<div class="log-entry">${entry}</div>`
+                ).join('');
+                logPanel.scrollTop = 0;
+            }
+            
+            updateAttackStats() {
+                this.stats.activeThreats = Math.floor(Math.random() * 15) + 5;
+                this.stats.blockedAttacks += Math.floor(Math.random() * 3) + 1;
+                this.stats.dataPackets += Math.floor(Math.random() * 1000) + 500;
+                this.stats.responseTime = Math.floor(Math.random() * 100) + 10;
+            }
+            
+            updateThreatLevel() {
+                this.threatLevel = Math.min(100, Math.max(20, this.threatLevel + (Math.random() - 0.5) * 20));
+                
+                const fill = document.getElementById('threatFill');
+                const text = document.getElementById('threatText');
+                
+                fill.style.width = this.threatLevel + '%';
+                
+                if (this.threatLevel < 40) {
+                    text.textContent = 'LOW';
+                    text.style.color = '#00ff41';
+                } else if (this.threatLevel < 70) {
+                    text.textContent = 'ELEVATED';
+                    text.style.color = '#ffaa00';
+                } else {
+                    text.textContent = 'CRITICAL';
+                    text.style.color = '#ff0000';
+                }
+            }
+            
+            updateStats() {
+                setInterval(() => {
+                    document.getElementById('activeThreats').textContent = this.stats.activeThreats;
+                    document.getElementById('blockedAttacks').textContent = this.stats.blockedAttacks;
+                    document.getElementById('dataPackets').textContent = this.stats.dataPackets.toLocaleString();
+                    document.getElementById('responseTime').textContent = this.stats.responseTime + 'ms';
+                    
+                    const uptime = Date.now() - this.stats.startTime;
+                    const hours = Math.floor(uptime / 3600000);
+                    const minutes = Math.floor((uptime % 3600000) / 60000);
+                    const seconds = Math.floor((uptime % 60000) / 1000);
+                    document.getElementById('uptime').textContent = 
+                        `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                }, 1000);
+            }
+            
+            updateCoordinates() {
+                setInterval(() => {
+                    const randomCity = this.cities[Math.floor(Math.random() * this.cities.length)];
+                    document.getElementById('coordinates').textContent = 
+                        `LAT: ${randomCity.lat.toFixed(4)}° LON: ${randomCity.lon.toFixed(4)}°`;
+                }, 3000);
+            }
+            
+            cleanupOldAttacks() {
+                const attackLines = document.querySelectorAll('.attack-line');
+                attackLines.forEach(line => {
+                    if (Date.now() - parseInt(line.dataset.created || '0') > 1000) {
+                        if (line.parentNode) {
+                            line.parentNode.removeChild(line);
+                        }
+                    }
+                });
+            }
+        }
+        
+        // Initialize the threat monitor when the page loads
+        window.addEventListener('load', () => {
+            new ThreatMonitor();
+        });
+    </script>
+</body>
+</html>
