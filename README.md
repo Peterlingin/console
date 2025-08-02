@@ -1,3 +1,4 @@
+# console
 A project full of fake, pointless consoles—packed into a single HTML file. No real use. Just for fun.
 
 You can check out the full website for this project at:
@@ -77,5 +78,5 @@ The map even highlights “de-tortellinized” zones where you're safe from temp
 
 Just for laughs, of course—tortellini are amazing. No judgment.
 
----
+
 
