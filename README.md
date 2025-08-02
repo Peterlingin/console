@@ -9,9 +9,9 @@ The result is a cinematic and engaging experience that feels like something from
 **Voight-Kampff Machine**
 A Blade Runner-inspired Voight-Kampff machine simulator! This will be a faithful recreation of the device from the movie, complete with the retro-futuristic aesthetic and randomly generated empathy test questions. The "Analyze" button performs a simulated analysis of the subject's responses. Here's what it actually does:
 1. Calculates fake metrics based on random numbers and simple algorithms:
-Empathy Index: Random score between 60-100
-Average Response Time: Calculated from actual typing/response times
-Stress Level: Based on simulated heart rate readings
-Classification: Determined by the empathy score (Human/Suspect/Replicant)
+- Empathy Index: Random score between 60-100
+- Average Response Time: Calculated from actual typing/response times
+- Stress Level: Based on simulated heart rate readings
+- Classification: Determined by the empathy score (Human/Suspect/Replicant)
 
 3. Visual feedback: Changes status lights and displays results in the analysis panel
