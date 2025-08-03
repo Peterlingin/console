@@ -78,5 +78,13 @@ The map even highlights “de-tortellinized” zones where you're safe from temp
 
 Just for laughs, of course—tortellini are amazing. No judgment.
 
+---
+
+**Cybersecurity Buzzword Generator**
+
+A "professional" cybersecurity phrase generator that mimics the style of big-name consultancy slides. It’s called *Garpner* (totally not a reference to any pricey firms you may know). It randomly mixes buzzwords from four categories to crank out thousands of polished-sounding nonsense phrases. Perfect for your next fake briefing.
+
+The page is completely self-contained and can be saved as an HTML file to use offline. Just click "Generate Insight" to produce a new phrase with a smooth fade animation. Perfect for any cybersecurity conference or presentation where you need to sound strategic without committing to anything specific!.
+
 
 
