@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Terminal - System Access</title>
+    <title>Terminal - root@kali</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap');
         
         * {
             margin: 0;
@@ -14,82 +14,88 @@
         }
         
         body {
-            background: #000;
+            background: #0a0a0a;
             color: #00ff00;
-            font-family: 'Courier Prime', monospace;
+            font-family: 'Fira Code', monospace;
             font-size: 14px;
-            line-height: 1.4;
             overflow: hidden;
-            cursor: none;
-        }
-        
-        .terminal {
-            width: 100vw;
             height: 100vh;
-            background: linear-gradient(45deg, #001100, #000000);
-            position: relative;
-            overflow: hidden;
         }
         
-        .terminal::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: 
-                repeating-linear-gradient(
-                    0deg,
-                    transparent,
-                    transparent 2px,
-                    rgba(0, 255, 0, 0.03) 2px,
-                    rgba(0, 255, 0, 0.03) 4px
-                );
-            pointer-events: none;
-            z-index: 10;
-        }
-        
-        .header {
-            background: #001a00;
-            padding: 5px 10px;
-            border-bottom: 1px solid #00ff00;
-            font-size: 12px;
+        .terminal-container {
+            height: 100vh;
             display: flex;
+            flex-direction: column;
+            background: linear-gradient(45deg, #001100 0%, #000800 50%, #001100 100%);
+        }
+        
+        .terminal-header {
+            background: #1a1a1a;
+            color: #fff;
+            padding: 8px 16px;
+            font-size: 12px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            align-items: center;
             justify-content: space-between;
         }
         
-        .content {
-            padding: 20px;
-            height: calc(100vh - 35px);
-            overflow-y: auto;
+        .terminal-title {
+            font-weight: 500;
         }
         
-        .line {
+        .terminal-controls {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .terminal-btn {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .close { background: #ff5f57; }
+        .minimize { background: #ffbd2e; }
+        .maximize { background: #28ca42; }
+        
+        .terminal-body {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.9);
+        }
+        
+        .terminal-line {
             margin-bottom: 2px;
-            opacity: 0;
-            animation: fadeIn 0.5s forwards;
+            white-space: pre-wrap;
+            word-break: break-all;
         }
         
         .prompt {
-            color: #ff4444;
-            font-weight: bold;
+            color: #ff6b6b;
+            font-weight: 500;
         }
         
         .success {
-            color: #00ff00;
+            color: #51cf66;
         }
         
         .warning {
-            color: #ffaa00;
+            color: #ffd43b;
         }
         
         .error {
-            color: #ff4444;
+            color: #ff6b6b;
         }
         
         .info {
-            color: #44aaff;
+            color: #74c0fc;
+        }
+        
+        .dim {
+            color: #666;
         }
         
         .cursor {
@@ -97,19 +103,17 @@
             animation: blink 1s infinite;
         }
         
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
         @keyframes blink {
             0%, 50% { opacity: 1; }
             51%, 100% { opacity: 0; }
         }
         
-        .typing {
-            border-right: 2px solid #00ff00;
-            animation: blink 1s infinite;
+        .status-bar {
+            background: #1a1a1a;
+            color: #aaa;
+            padding: 4px 16px;
+            font-size: 11px;
+            border-top: 1px solid #333;
         }
         
         .matrix-bg {
@@ -118,280 +122,815 @@
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: -1;
+            pointer-events: none;
             opacity: 0.1;
+            z-index: -1;
         }
         
-        .progress-bar {
-            width: 0%;
+        .scan-line {
+            position: fixed;
+            width: 100%;
             height: 2px;
-            background: #00ff00;
-            transition: width 0.3s;
-            margin: 5px 0;
+            background: linear-gradient(90deg, transparent, #00ff00, transparent);
+            animation: scan 3s linear infinite;
+            opacity: 0.3;
+            z-index: 1;
+            pointer-events: none;
         }
         
-        .ascii-art {
-            color: #008800;
-            font-size: 10px;
-            line-height: 1;
+        @keyframes scan {
+            0% { top: 0; }
+            100% { top: 100%; }
         }
     </style>
 </head>
 <body>
-    <div class="terminal">
-        <div class="header">
-            <span>root@darknet:~# SECURE_SHELL_v2.1.3</span>
-            <span id="time"></span>
+    <div class="scan-line"></div>
+    <div class="terminal-container">
+        <div class="terminal-header">
+            <div class="terminal-title">root@kali-linux: ~/pentest</div>
+            <div class="terminal-controls">
+                <div class="terminal-btn minimize"></div>
+                <div class="terminal-btn maximize"></div>
+                <div class="terminal-btn close"></div>
+            </div>
         </div>
-        <div class="content" id="terminal-content">
-            <div class="ascii-art">
-			<pre>
-
-██╗  ██╗ █████╗  ██████╗██╗  ██╗    ███╗   ███╗███████╗    ███╗   ██╗ ██████╗ ██╗    ██╗
-██║  ██║██╔══██╗██╔════╝██║ ██╔╝    ████╗ ████║██╔════╝    ████╗  ██║██╔═══██╗██║    ██║
-███████║███████║██║     █████╔╝     ██╔████╔██║█████╗      ██╔██╗ ██║██║   ██║██║ █╗ ██║
-██╔══██║██╔══██║██║     ██╔═██╗     ██║╚██╔╝██║██╔══╝      ██║╚██╗██║██║   ██║██║███╗██║
-██║  ██║██║  ██║╚██████╗██║  ██╗    ██║ ╚═╝ ██║███████╗    ██║ ╚████║╚██████╔╝╚███╔███╔╝
-╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝    ╚═╝     ╚═╝╚══════╝    ╚═╝  ╚═══╝ ╚═════╝  ╚══╝╚══╝ 
-
-            </pre>
-			</div>
-            <div class="line"><span class="info">Operating System: Gentoo 2.4.1</span></div>
-			<div class="line"><span class="info">Kernel: x86_64 Linux 4.14.52-gentoo</span></div>
-            <div class="line"><span class="info">Initializing penetration modules...</span></div>
+        <div class="terminal-body" id="terminal">
+            <div class="terminal-line">
+                <span class="dim">Last login: Thu Aug 14 15:42:33 2025 from 10.0.0.1</span>
+            </div>
+            <div class="terminal-line">
+                <span class="info">┌──(root💀kali)-[~/pentest]</span>
+            </div>
+            <div class="terminal-line">
+                <span class="info">└─$ </span><span class="cursor"> </span>
+            </div>
+        </div>
+        <div class="status-bar">
+            Status: Initializing penetration test environment... | Target Network: 192.168.1.0/24 | Time: <span id="time"></span>
         </div>
     </div>
 
     <script>
-        const terminal = document.getElementById('terminal-content');
-        let lineCount = 0;
+        const terminal = document.getElementById('terminal');
+        const timeElement = document.getElementById('time');
+        let currentStep = 0;
+        let isTyping = false;
         
         // Update time
-        function updateTime() {
-            const now = new Date();
-            document.getElementById('time').textContent = now.toLocaleTimeString();
-        }
-        setInterval(updateTime, 1000);
-        updateTime();
+        setInterval(() => {
+            timeElement.textContent = new Date().toLocaleTimeString();
+        }, 1000);
         
-        // Generate random IP addresses
-        function randomIP() {
-            return `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
-        }
-        
-        // Generate random ports
-        function randomPort() {
-            return Math.floor(Math.random() * 65535) + 1;
-        }
-        
-        // Generate random hashes
-        function randomHash() {
-            const chars = '0123456789abcdef';
-            let hash = '';
-            for (let i = 0; i < 32; i++) {
-                hash += chars[Math.floor(Math.random() * chars.length)];
-            }
-            return hash;
-        }
-        
-        // Add line to terminal
-        function addLine(text, className = '') {
-            const line = document.createElement('div');
-            line.className = `line ${className}`;
-            line.innerHTML = text;
-            line.style.animationDelay = `${lineCount * 0.1}s`;
-            terminal.appendChild(line);
-            lineCount++;
-            
-            // Auto scroll
-            terminal.scrollTop = terminal.scrollHeight;
-            
-            // Remove old lines to prevent overload
-            if (terminal.children.length > 200) {
-                terminal.removeChild(terminal.firstChild);
-            }
-        }
-        
-        // Progress bar
-        function showProgress(label, duration = 3000) {
-            addLine(`<span class="info">${label}</span>`);
-            const progressLine = document.createElement('div');
-            progressLine.className = 'line';
-            progressLine.innerHTML = '<div class="progress-bar" id="current-progress"></div>';
-            terminal.appendChild(progressLine);
-            
-            const progressBar = document.getElementById('current-progress');
-            let width = 0;
-            const interval = setInterval(() => {
-                width += Math.random() * 15;
-                if (width >= 100) {
-                    width = 100;
-                    clearInterval(interval);
-                    progressBar.style.width = '100%';
-                    setTimeout(() => addLine('<span class="success">[COMPLETED]</span>'), 500);
-                } else {
-                    progressBar.style.width = width + '%';
-                }
-            }, duration / 20);
-        }
-        
-        // Simulated hacking sequences
-        const hackingSequences = [
-            () => {
-                addLine('<span class="prompt">root@darknet:~#</span> nmap -sS -O cyberdyne-systems.com');
-                setTimeout(() => {
-                    addLine('<span class="info">Starting port scan on cyberdyne-systems.com...</span>');
-                    showProgress('Scanning in progress...');
-                }, 1000);
-                
-                setTimeout(() => {
-                    for (let i = 0; i < 8; i++) {
-                        setTimeout(() => {
-                            const ip = randomIP();
-                            const port = randomPort();
-                            const status = Math.random() > 0.7 ? 'OPEN' : 'CLOSED';
-                            const className = status === 'OPEN' ? 'success' : 'info';
-                            addLine(`<span class="${className}">${ip}:${port} - ${status}</span>`);
-                        }, i * 300);
-                    }
-                }, 4000);
+        const hackingSequence = [
+            {
+                command: "ifconfig eth0",
+                output: [
+                    "eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500",
+                    "        inet 192.168.1.100  netmask 255.255.255.0  broadcast 192.168.1.255",
+                    "        inet6 fe80::a00:27ff:fe4e:66a1  prefixlen 64  scopeid 0x20<link>",
+                    "        ether 08:00:27:4e:66:a1  txqueuelen 1000  (Ethernet)",
+                    "        RX packets 15847  bytes 18432156 (17.5 MiB)",
+                    "        RX errors 0  dropped 0  overruns 0  frame 0",
+                    "        TX packets 9635  bytes 1284957 (1.2 MiB)",
+                    "        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0"
+                ]
             },
-            
-            () => {
-                addLine('<span class="prompt">root@darknet:~#</span> sqlmap -u "http://crm.cyberdyne-systems/login" --dbs');
-                setTimeout(() => {
-                    addLine('<span class="warning">Possible SQL injection vulnerability detected</span>');
-                    addLine('<span class="info">Extracting databases...</span>');
-                    showProgress('Database infiltration...');
-                }, 1500);
-                
-                setTimeout(() => {
-                    const databases = ['users', 'admin', 'logs', 'config', 'payments'];
-                    databases.forEach((db, i) => {
-                        setTimeout(() => {
-                            addLine(`<span class="success">Database found: ${db}</span>`);
-                        }, i * 400);
-                    });
-                }, 5000);
+            {
+                command: "arp-scan -l",
+                output: [
+                    "Interface: eth0, type: EN10MB, MAC: 08:00:27:4e:66:a1, IPv4: 192.168.1.100",
+                    "Starting arp-scan 1.9.7 with 256 hosts (https://github.com/royhills/arp-scan)",
+                    "192.168.1.1\t00:14:d1:aa:bb:cc\tRealtek Semiconductor Corp.",
+                    "192.168.1.25\t08:00:27:dd:ee:ff\tPCS Systemtechnik GmbH",
+                    "192.168.1.50\t52:54:00:12:34:56\tQEMU",
+                    "192.168.1.75\t00:0c:29:98:76:54\tVMware, Inc.",
+                    "",
+                    "4 packets received by filter, 0 packets dropped by kernel",
+                    "Ending arp-scan 1.9.7: 256 hosts scanned in 2.95 seconds"
+                ]
             },
-            
-            () => {
-                addLine('<span class="prompt">root@darknet:~#</span> hydra -l admin -P passwords.txt ssh://192.168.1.100');
-                setTimeout(() => {
-                    addLine('<span class="info">Brute force attack in progress on SSH...</span>');
-                    showProgress('Testing credentials...');
-                }, 1000);
-                
-                setTimeout(() => {
-                    const attempts = ['admin:password123', 'admin:12345', 'admin:qwerty', 'admin:admin123'];
-                    attempts.forEach((attempt, i) => {
-                        setTimeout(() => {
-                            if (i === attempts.length - 1) {
-                                addLine(`<span class="success">SUCCESS! Valid credentials: ${attempt}</span>`);
-                            } else {
-                                addLine(`<span class="error">FAILED: ${attempt}</span>`);
-                            }
-                        }, i * 600);
-                    });
-                }, 4500);
+            {
+                command: "nmap -sS -O 192.168.1.0/24",
+                output: [
+                    "Starting Nmap 7.94 ( https://nmap.org ) at 2025-08-15 15:47 EDT",
+                    "Nmap scan report for router.local (192.168.1.1)",
+                    "Host is up (0.00025s latency).",
+                    "All 1000 scanned ports on 192.168.1.1 are in ignored states.",
+                    "OS details: Linux 3.2 - 4.9 (router)",
+                    "",
+                    "Nmap scan report for workstation.local (192.168.1.25)",
+                    "Host is up (0.00028s latency).",
+                    "Not shown: 996 closed ports",
+                    "PORT     STATE SERVICE",
+                    "135/tcp  open  msrpc",
+                    "139/tcp  open  netbios-ssn",
+                    "445/tcp  open  microsoft-ds",
+                    "3389/tcp open  ms-wbt-server",
+                    "OS details: Microsoft Windows 10",
+                    "",
+                    "Nmap scan report for webserver.local (192.168.1.50)",
+                    "Host is up (0.00031s latency).",
+                    "Not shown: 997 closed ports",
+                    "PORT     STATE SERVICE",
+                    "22/tcp   open  ssh",
+                    "80/tcp   open  http",
+                    "443/tcp  open  https",
+                    "OS details: Linux 3.2 - 4.9",
+                    "",
+                    "Nmap scan report for database.local (192.168.1.75)",
+                    "Host is up (0.00042s latency).",
+                    "Not shown: 998 closed ports",
+                    "PORT     STATE SERVICE",
+                    "21/tcp   open  ftp",
+                    "3306/tcp open  mysql",
+                    "OS details: Linux 2.6.32 - 3.10",
+                    "",
+                    "Nmap done: 256 IP addresses (4 hosts up) scanned in 8.73 seconds"
+                ]
             },
-            
-            () => {
-                addLine('<span class="prompt">root@darknet:~#</span> msfconsole');
-                setTimeout(() => {
-                    addLine('<span class="info">Metasploit Framework initialized</span>');
-                    addLine('<span class="prompt">msf6 ></span> use exploit/windows/smb/ms17_010_eternalblue');
-                }, 1500);
-                
-                setTimeout(() => {
-                    addLine('<span class="prompt">msf6 exploit(windows/smb/ms17_010_eternalblue) ></span> set RHOSTS ' + randomIP());
-                    addLine('<span class="info">Target set</span>');
-                }, 3000);
-                
-                setTimeout(() => {
-                    addLine('<span class="prompt">msf6 exploit(windows/smb/ms17_010_eternalblue) ></span> exploit');
-                    showProgress('Exploiting vulnerability...');
-                }, 4500);
-                
-                setTimeout(() => {
-                    addLine('<span class="success">Exploit successful! Shell obtained on ' + randomIP() + '</span>');
-                    addLine('<span class="success">Administrator access acquired</span>');
-                }, 8000);
+            {
+                command: "nmap --script vuln 192.168.1.50",
+                output: [
+                    "Starting Nmap 7.94 ( https://nmap.org ) at 2025-08-15 15:48 EDT",
+                    "Nmap scan report for webserver.local (192.168.1.50)",
+                    "Host is up (0.00031s latency).",
+                    "",
+                    "PORT    STATE SERVICE",
+                    "22/tcp  open  ssh",
+                    "| ssh-brute:",
+                    "|   Accounts: No valid accounts found",
+                    "|_  Statistics: Performed 32 guesses in 30 seconds",
+                    "80/tcp  open  http",
+                    "| http-csrf:",
+                    "| Spidering limited to: maxdepth=3; maxpagecount=20; withinhost=webserver.local",
+                    "|   Found the following possible CSRF vulnerabilities:",
+                    "|     Path: http://192.168.1.50:80/admin/",
+                    "|     Form id: login-form",
+                    "|_    Form action: login.php",
+                    "443/tcp open  https",
+                    "|_ssl-ccs-injection: No reply from server",
+                    "",
+                    "Nmap done: 1 IP address (1 host up) scanned in 15.47 seconds"
+                ]
             },
-            
-            () => {
-                addLine('<span class="prompt">root@darknet:~#</span> aircrack-ng -a2 -b 00:14:6C:7E:40:80 -w wordlist.txt capture.cap');
-                setTimeout(() => {
-                    addLine('<span class="info">Cracking WiFi WPA2 password...</span>');
-                    addLine('<span class="info">SSID: "SecureNetwork_5G"</span>');
-                    showProgress('Dictionary attack in progress...');
-                }, 1200);
-                
-                setTimeout(() => {
-                    for (let i = 0; i < 5; i++) {
-                        setTimeout(() => {
-                            const tested = Math.floor(Math.random() * 10000);
-                            addLine(`<span class="info">Passwords tested: ${tested}</span>`);
-                        }, i * 800);
-                    }
-                }, 4500);
-                
-                setTimeout(() => {
-                    addLine('<span class="success">PASSWORD FOUND: "MySecretPass2024"</span>');
-                }, 9000);
+            {
+                command: "nmap -sV -A -p22,80,443 192.168.1.50",
+                output: [
+                    "Starting Nmap 7.94 ( https://nmap.org ) at 2025-08-15 15:48 EDT",
+                    "Nmap scan report for webserver.local (192.168.1.50)",
+                    "Host is up (0.00031s latency).",
+                    "PORT    STATE SERVICE  VERSION",
+                    "22/tcp  open  ssh      OpenSSH 7.4 (protocol 2.0)",
+                    "| ssh-hostkey:",
+                    "|   2048 aa:bb:cc:dd:ee:ff:aa:bb:cc:dd (RSA)",
+                    "|   256 11:22:33:44:55:66:77:88:99:aa (ECDSA)",
+                    "|_  256 ab:cd:ef:12:34:56:78:90:ab:cd (ED25519)",
+                    "80/tcp  open  http     Apache httpd 2.4.6 ((CentOS))",
+                    "|_http-server-header: Apache/2.4.6 (CentOS)",
+                    "|_http-title: Corporate Website - Login",
+                    "| http-methods:",
+                    "|_  Potentially risky methods: TRACE",
+                    "443/tcp open  ssl/http Apache httpd 2.4.6 ((CentOS))",
+                    "|_ssl-date: TLS randomness does not represent time",
+                    "| ssl-cert: Subject: commonName=webserver.local",
+                    "| Not valid before: 2024-01-15T10:30:00",
+                    "|_Not valid after:  2026-01-14T10:30:00",
+                    "",
+                    "Service detection performed. Please report any incorrect results at https://nmap.org/submit/"
+                ]
+            },
+            {
+                command: "dirb http://192.168.1.50",
+                output: [
+                    "",
+                    "-----------------",
+                    "DIRB v2.22",
+                    "By The Dark Raver",
+                    "-----------------",
+                    "",
+                    "START_TIME: Thu Aug 15 15:49:12 2025",
+                    "URL_BASE: http://192.168.1.50/",
+                    "WORDLIST_FILE: /usr/share/dirb/wordlists/common.txt",
+                    "",
+                    "-----------------",
+                    "",
+                    "GENERATED WORDS: 4612",
+                    "",
+                    "---- Scanning URL: http://192.168.1.50/ ----",
+                    "+ http://192.168.1.50/admin (CODE:200|SIZE:1247)",
+                    "+ http://192.168.1.50/backup (CODE:200|SIZE:891)",
+                    "+ http://192.168.1.50/cgi-bin/ (CODE:403|SIZE:217)",
+                    "+ http://192.168.1.50/config (CODE:200|SIZE:2156)",
+                    "+ http://192.168.1.50/index.html (CODE:200|SIZE:3452)",
+                    "+ http://192.168.1.50/uploads (CODE:200|SIZE:567)",
+                    "",
+                    "-----------------",
+                    "END_TIME: Thu Aug 15 15:49:45 2025",
+                    "DOWNLOADED: 4612 - FOUND: 6"
+                ]
+            },
+            {
+                command: "curl -s http://192.168.1.50/backup/ | head -20",
+                output: [
+                    "<!DOCTYPE html>",
+                    "<html><head><title>Backup Files</title></head>",
+                    "<body>",
+                    "<h1>Database Backup Files</h1>",
+                    "<ul>",
+                    "<li><a href=\"db_backup_2024.sql\">db_backup_2024.sql</a></li>",
+                    "<li><a href=\"config_backup.tar.gz\">config_backup.tar.gz</a></li>",
+                    "<li><a href=\"user_export.csv\">user_export.csv</a></li>",
+                    "</ul>",
+                    "</body></html>"
+                ]
+            },
+            {
+                command: "wget -q http://192.168.1.50/config/database.conf",
+                output: [
+                    ""
+                ]
+            },
+            {
+                command: "cat database.conf",
+                output: [
+                    "# Database Configuration",
+                    "[mysql]",
+                    "host=localhost",
+                    "port=3306",
+                    "database=company_db",
+                    "username=dbadmin",
+                    "password=MySQL_P@ssw0rd_2024",
+                    "",
+                    "[backup]",
+                    "enabled=true",
+                    "schedule=daily",
+                    "retention=30"
+                ]
+            },
+            {
+                command: "hydra -l admin -P /usr/share/wordlists/rockyou.txt 192.168.1.50 ssh -t 16",
+                output: [
+                    "Hydra v9.5 (c) 2023 by van Hauser/THC & David Maciejak - Please do not use in military or secret service organizations, or for illegal purposes (this is a wish).",
+                    "",
+                    "Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at 2025-08-15 15:50:33",
+                    "[WARNING] Many SSH configurations limit the number of parallel tasks, it is recommended to reduce the tasks: use -t 4",
+                    "[DATA] max 16 tasks per 1 server, overall 16 tasks, 14344399 login tries (l:1/p:14344399), ~896525 tries per task",
+                    "[DATA] attacking ssh://192.168.1.50:22/",
+                    "[STATUS] 178.00 tries/min, 178 tries in 00:01h, 14344221 to do in 1342:29h, 16 active",
+                    "[STATUS] 184.67 tries/min, 554 tries in 00:03h, 14343845 to do in 1294:27h, 16 active",
+                    "[22][ssh] host: 192.168.1.50   login: admin   password: password123",
+                    "1 of 1 target successfully completed, 1 valid password found",
+                    "Hydra (https://github.com/vanhauser-thc/thc-hydra) finished at 2025-08-15 15:53:47"
+                ]
+            },
+            {
+                command: "ssh admin@192.168.1.50",
+                output: [
+                    "The authenticity of host '192.168.1.50 (192.168.1.50)' can't be established.",
+                    "ECDSA key fingerprint is SHA256:nThbg6kXUpJWGl7E1IGOCspRomTxdCARLviKw6E5SY8.",
+                    "Are you sure you want to continue connecting (yes/no/[fingerprint])? yes",
+                    "Warning: Permanently added '192.168.1.50' (ECDSA) to the list of known hosts.",
+                    "admin@192.168.1.50's password: ",
+                    "Last login: Thu Aug 14 14:23:11 2025 from 192.168.1.25",
+                    "",
+                    "       ____            _    ____  ",
+                    "      / ___|___ _ __ | |_ / ___| ",
+                    "     | |   / _ \\ '_ \\| __| |  _ ",
+                    "     | |__|  __/ | | | |_| |_| |",
+                    "      \\____\\___|_| |_|\\__|\\____|",
+                    "",
+                    "Welcome to CentOS Linux 7 (Core)",
+                    "System information as of Thu Aug 15 15:54:02 EDT 2025:",
+                    "",
+                    "[admin@webserver ~]$ "
+                ]
+            },
+            {
+                command: "uname -a",
+                output: [
+                    "Linux webserver.local 3.10.0-1160.el7.x86_64 #1 SMP Mon Oct 19 16:18:59 UTC 2020 x86_64 x86_64 x86_64 GNU/Linux"
+                ]
+            },
+            {
+                command: "whoami && id",
+                output: [
+                    "admin",
+                    "uid=1001(admin) gid=1001(admin) groups=1001(admin),10(wheel)"
+                ]
+            },
+            {
+                command: "ls -la /home/admin/",
+                output: [
+                    "total 32",
+                    "drwx------. 3 admin admin  4096 Aug 14 14:20 .",
+                    "drwxr-xr-x. 3 root  root   4096 Jan 15 10:30 ..",
+                    "-rw-------. 1 admin admin   124 Aug 14 14:23 .bash_history",
+                    "-rw-r--r--. 1 admin admin    18 Dec 29  2013 .bash_logout",
+                    "-rw-r--r--. 1 admin admin   176 Dec 29  2013 .bash_profile",
+                    "-rw-r--r--. 1 admin admin   124 Dec 29  2013 .bashrc",
+                    "drwx------. 2 admin admin  4096 Jan 15 10:30 .ssh",
+                    "-rw-------. 1 admin admin   856 Aug 14 14:20 .viminfo"
+                ]
+            },
+            {
+                command: "cat /etc/passwd | grep -E '(root|admin|mysql)'",
+                output: [
+                    "root:x:0:0:root:/root:/bin/bash",
+                    "admin:x:1001:1001:System Admin:/home/admin:/bin/bash",
+                    "mysql:x:27:27:MySQL Server:/var/lib/mysql:/bin/false"
+                ]
+            },
+            {
+                command: "sudo -l",
+                output: [
+                    "Matching Defaults entries for admin on webserver:",
+                    "    !visiblepw, always_set_home, match_group_by_gid, always_query_group_plugin, env_reset, env_keep=\"COLORS DISPLAY HOSTNAME HISTSIZE KDEDIR LS_COLORS\"",
+                    "",
+                    "User admin may run the following commands on webserver:",
+                    "    (ALL) NOPASSWD: /usr/bin/vim, /usr/bin/find, /usr/bin/awk"
+                ]
+            },
+            {
+                command: "find /var/log -name \"*.log\" -type f 2>/dev/null | head -5",
+                output: [
+                    "/var/log/messages",
+                    "/var/log/secure",
+                    "/var/log/maillog",
+                    "/var/log/cron",
+                    "/var/log/boot.log"
+                ]
+            },
+            {
+                command: "sudo find /etc -name passwd -exec cat {} \\;",
+                output: [
+                    "root:x:0:0:root:/root:/bin/bash",
+                    "bin:x:1:1:bin:/bin:/sbin/nologin",
+                    "daemon:x:2:2:daemon:/sbin:/sbin/nologin",
+                    "adm:x:3:4:adm:/var/adm:/sbin/nologin",
+                    "lp:x:4:7:lp:/var/spool/lpd:/sbin/nologin",
+                    "sync:x:5:0:sync:/sbin:/bin/sync",
+                    "shutdown:x:6:0:shutdown:/sbin:/sbin/shutdown",
+                    "halt:x:7:0:halt:/sbin:/sbin/halt",
+                    "mail:x:8:12:mail:/var/spool/mail:/sbin/nologin",
+                    "operator:x:11:0:operator:/root:/sbin/nologin",
+                    "games:x:12:100:games:/usr/games:/sbin/nologin",
+                    "ftp:x:14:50:FTP User:/var/ftp:/sbin/nologin",
+                    "nobody:x:99:99:Nobody:/:nologin",
+                    "admin:x:1001:1001:System Admin:/home/admin:/bin/bash",
+                    "mysql:x:27:27:MySQL Server:/var/lib/mysql:/bin/false",
+                    "apache:x:48:48:Apache:/usr/share/httpd:/sbin/nologin"
+                ]
+            },
+            {
+                command: "sudo awk 'BEGIN {system(\"/bin/bash\")}'",
+                output: [
+                    "[root@webserver admin]# "
+                ]
+            },
+            {
+                command: "whoami",
+                output: [
+                    "root"
+                ]
+            },
+            {
+                command: "cat /etc/shadow | head -8",
+                output: [
+                    "root:$6$rounds=4096$saltsalt$hashedpassword::0:99999:7:::",
+                    "bin:*:18353:0:99999:7:::",
+                    "daemon:*:18353:0:99999:7:::",
+                    "adm:*:18353:0:99999:7:::",
+                    "lp:*:18353:0:99999:7:::",
+                    "sync:*:18353:0:99999:7:::",
+                    "shutdown:*:18353:0:99999:7:::",
+                    "admin:$6$rounds=4096$anothersalt$anotherhash:18875:0:99999:7:::"
+                ]
+            },
+            {
+                command: "netstat -tulpn | grep LISTEN",
+                output: [
+                    "tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      1234/sshd",
+                    "tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      1456/httpd",
+                    "tcp        0      0 127.0.0.1:3306          0.0.0.0:*               LISTEN      1678/mysqld",
+                    "tcp        0      0 0.0.0.0:443             0.0.0.0:*               LISTEN      1456/httpd",
+                    "tcp6       0      0 :::22                   :::*                    LISTEN      1234/sshd"
+                ]
+            },
+            {
+                command: "find /var/www/html -name \"*.php\" -type f",
+                output: [
+                    "/var/www/html/index.php",
+                    "/var/www/html/login.php",
+                    "/var/www/html/config.php",
+                    "/var/www/html/admin/dashboard.php",
+                    "/var/www/html/admin/users.php",
+                    "/var/www/html/includes/db.php"
+                ]
+            },
+            {
+                command: "cat /var/www/html/config.php",
+                output: [
+                    "<?php",
+                    "// Database configuration",
+                    "$servername = \"localhost\";",
+                    "$username = \"webuser\";",
+                    "$password = \"web_db_pass_2023\";",
+                    "$dbname = \"company_db\";",
+                    "",
+                    "// Admin credentials",
+                    "$admin_user = \"webadmin\";",
+                    "$admin_pass = \"SuperSecure2024!\";",
+                    "",
+                    "$conn = new mysqli($servername, $username, $password, $dbname);",
+                    "if ($conn->connect_error) {",
+                    "    die(\"Connection failed: \" . $conn->connect_error);",
+                    "}",
+                    "?>"
+                ]
+            },
+            {
+                command: "cat /root/database.conf",
+                output: [
+                    "# Database Configuration",
+                    "[mysql]",
+                    "host=localhost",
+                    "port=3306",
+                    "database=company_db",
+                    "username=dbadmin",
+                    "password=MySQL_P@ssw0rd_2024",
+                    "",
+                    "[backup]",
+                    "enabled=true",
+                    "schedule=daily",
+                    "retention=30"
+                ]
+            },
+            {
+                command: "mysql -u dbadmin -p'MySQL_P@ssw0rd_2024' -e \"SHOW DATABASES;\"",
+                output: [
+                    "mysql: [Warning] Using a password on the command line interface can be insecure.",
+                    "+--------------------+",
+                    "| Database           |",
+                    "+--------------------+",
+                    "| information_schema |",
+                    "| company_db         |",
+                    "| mysql              |",
+                    "| performance_schema |",
+                    "| sys                |",
+                    "+--------------------+"
+                ]
+            },
+            {
+                command: "mysql -u dbadmin -p'MySQL_P@ssw0rd_2024' company_db -e \"SHOW TABLES;\"",
+                output: [
+                    "mysql: [Warning] Using a password on the command line interface can be insecure.",
+                    "+----------------------+",
+                    "| Tables_in_company_db |",
+                    "+----------------------+",
+                    "| employees            |",
+                    "| login_credentials    |",
+                    "| financial_records    |",
+                    "| customer_data        |",
+                    "| audit_logs           |",
+                    "| sensitive_data       |",
+                    "+----------------------+"
+                ]
+            },
+            {
+                command: "mysql -u dbadmin -p'MySQL_P@ssw0rd_2024' company_db -e \"SELECT * FROM login_credentials LIMIT 8;\"",
+                output: [
+                    "mysql: [Warning] Using a password on the command line interface can be insecure.",
+                    "+----+----------+----------------------------------+----------+",
+                    "| id | username | password_hash                    | role     |",
+                    "+----+----------+----------------------------------+----------+",
+                    "|  1 | jdoe     | 5e884898da28047151d0e56f8dc629... | user     |",
+                    "|  2 | msmith   | ef92b778bafe771e89245b89ecbc0816... | admin    |",
+                    "|  3 | bwilson  | 25d55ad283aa400af464c76d713c07a... | user     |",
+                    "|  4 | agarcia  | 098f6bcd4621d373cade4e832627b4f... | user     |",
+                    "|  5 | dchen    | 5d41402abc4b2a76b9719d911017c592... | manager  |",
+                    "|  6 | rjones   | 7c4a8d09ca3762af61e59520943dc264... | user     |",
+                    "|  7 | sjackson | 827ccb0eea8a706c4c34a16891f84e7b... | analyst  |",
+                    "+----+----------+----------------------------------+----------+"
+                ]
+            },
+            {
+                command: "mysql -u dbadmin -p'MySQL_P@ssw0rd_2024' company_db -e \"SELECT COUNT(*) FROM customer_data;\"",
+                output: [
+                    "mysql: [Warning] Using a password on the command line interface can be insecure.",
+                    "+----------+",
+                    "| COUNT(*) |",
+                    "+----------+",
+                    "|     5847 |",
+                    "+----------+"
+                ]
+            },
+            {
+                command: "mysql -u dbadmin -p'MySQL_P@ssw0rd_2024' company_db -e \"SELECT customer_id,email,phone FROM customer_data LIMIT 5;\"",
+                output: [
+                    "mysql: [Warning] Using a password on the command line interface can be insecure.",
+                    "+-------------+-------------------------+---------------+",
+                    "| customer_id | email                   | phone         |",
+                    "+-------------+-------------------------+---------------+",
+                    "|        1001 | john.doe@email.com      | 555-123-4567  |",
+                    "|        1002 | mary.smith@company.net  | 555-234-5678  |",
+                    "|        1003 | bob.wilson@gmail.com    | 555-345-6789  |",
+                    "|        1004 | anna.garcia@yahoo.com   | 555-456-7890  |",
+                    "|        1005 | david.chen@outlook.com  | 555-567-8901  |",
+                    "+-------------+-------------------------+---------------+"
+                ]
+            },
+            {
+                command: "ps aux | grep mysql",
+                output: [
+                    "mysql     1678  0.1  2.3 1127456 187532 ?      Sl   Aug14   0:15 /usr/sbin/mysqld --daemonize --pid-file=/var/run/mysqld/mysqld.pid",
+                    "root      8234  0.0  0.0 112824   980 pts/0    S+   15:58   0:00 grep --color=auto mysql"
+                ]
+            },
+            {
+                command: "ls -la /var/log/",
+                output: [
+                    "total 1248",
+                    "drwxr-xr-x.  8 root root     4096 Aug 15 15:45 .",
+                    "drwxr-xr-x. 19 root root     4096 Jan 15 10:30 ..",
+                    "drwx------.  2 root root     4096 Aug 14 03:15 audit",
+                    "-rw-------.  1 root root    12456 Aug 15 15:58 boot.log",
+                    "-rw-------.  1 root root        0 Aug 14 03:15 btmp",
+                    "-rw-------.  1 root root     2847 Aug 15 15:45 cron",
+                    "drwx------.  2 root root     4096 Aug 15 15:45 httpd",
+                    "-rw-------.  1 root root      856 Aug 15 15:58 lastlog",
+                    "-rw-------.  1 root root        0 Aug 14 03:15 maillog",
+                    "-rw-------.  1 root root    45672 Aug 15 15:58 messages",
+                    "drwx------.  2 mysql mysql   4096 Aug 14 03:15 mysql",
+                    "-rw-------.  1 root root    18563 Aug 15 15:54 secure",
+                    "-rw-rw-r--.  1 root utmp     3072 Aug 15 15:54 wtmp"
+                ]
+            },
+            {
+                command: "tail -5 /var/log/secure",
+                output: [
+                    "Aug 15 15:54:12 webserver sshd[5678]: Accepted password for admin from 192.168.1.100 port 42156 ssh2",
+                    "Aug 15 15:54:12 webserver sshd[5678]: pam_unix(sshd:session): session opened for user admin by (uid=0)",
+                    "Aug 15 15:56:23 webserver sudo: admin : TTY=pts/0 ; PWD=/home/admin ; USER=root ; COMMAND=/usr/bin/find /etc -name passwd -exec cat {} ;",
+                    "Aug 15 15:57:45 webserver sudo: admin : TTY=pts/0 ; PWD=/home/admin ; USER=root ; COMMAND=/usr/bin/awk BEGIN {system(\"/bin/bash\")}",
+                    "Aug 15 15:58:01 webserver su: pam_unix(su:session): session opened for user root by admin(uid=1001)"
+                ]
+            },
+            {
+                command: "crontab -l",
+                output: [
+                    "# Database backup script",
+                    "0 2 * * * /usr/local/bin/backup_db.sh",
+                    "# Log cleanup",
+                    "0 0 * * 0 /usr/bin/find /var/log -name \"*.log\" -mtime +30 -delete",
+                    "# System update check",
+                    "0 6 * * 1 /usr/bin/yum check-update > /var/log/update-check.log"
+                ]
+            },
+            {
+                command: "cat /usr/local/bin/backup_db.sh",
+                output: [
+                    "#!/bin/bash",
+                    "# Database backup script",
+                    "",
+                    "DB_USER=\"dbadmin\"",
+                    "DB_PASS=\"MySQL_P@ssw0rd_2024\"",
+                    "DB_NAME=\"company_db\"",
+                    "BACKUP_DIR=\"/var/backups/mysql\"",
+                    "DATE=$(date +\"%Y%m%d_%H%M%S\")",
+                    "",
+                    "# Create backup directory if it doesn't exist",
+                    "mkdir -p $BACKUP_DIR",
+                    "",
+                    "# Dump database",
+                    "mysqldump -u$DB_USER -p$DB_PASS $DB_NAME > $BACKUP_DIR/backup_$DATE.sql",
+                    "",
+                    "# Compress backup",
+                    "gzip $BACKUP_DIR/backup_$DATE.sql",
+                    "",
+                    "# Remove backups older than 30 days",
+                    "find $BACKUP_DIR -name \"*.sql.gz\" -mtime +30 -delete",
+                    "",
+                    "echo \"Backup completed: backup_$DATE.sql.gz\""
+                ]
+            },
+            {
+                command: "ls -la /var/backups/mysql/ | head -10",
+                output: [
+                    "total 156824",
+                    "drwx------. 2 root root     4096 Aug 15 02:00 .",
+                    "drwxr-xr-x. 3 root root     4096 Jan 15 10:30 ..",
+                    "-rw-------. 1 root root  2456789 Aug 13 02:00 backup_20250813_020001.sql.gz",
+                    "-rw-------. 1 root root  2467234 Aug 14 02:00 backup_20250814_020001.sql.gz",
+                    "-rw-------. 1 root root  2478956 Aug 15 02:00 backup_20250815_020001.sql.gz"
+                ]
+            },
+            {
+                command: "w",
+                output: [
+                    " 15:59:23 up 1 day,  1:44,  1 user,  load average: 0.08, 0.02, 0.01",
+                    "USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT",
+                    "admin    pts/0    192.168.1.100    15:54    0.00s  0.03s  0.00s w"
+                ]
+            },
+            {
+                command: "history | tail -10",
+                output: [
+                    "   48  mysql -u dbadmin -p'MySQL_P@ssw0rd_2024' company_db -e \"SELECT * FROM login_credentials LIMIT 8;\"",
+                    "   49  mysql -u dbadmin -p'MySQL_P@ssw0rd_2024' company_db -e \"SELECT COUNT(*) FROM customer_data;\"",
+                    "   50  mysql -u dbadmin -p'MySQL_P@ssw0rd_2024' company_db -e \"SELECT customer_id,email,phone FROM customer_data LIMIT 5;\"",
+                    "   51  ps aux | grep mysql",
+                    "   52  ls -la /var/log/",
+                    "   53  tail -5 /var/log/secure",
+                    "   54  crontab -l",
+                    "   55  cat /usr/local/bin/backup_db.sh",
+                    "   56  ls -la /var/backups/mysql/ | head -10",
+                    "   57  w"
+                ]
+            },
+            {
+                command: "find /home -name \"*.ssh\" -type d 2>/dev/null",
+                output: [
+                    "/home/admin/.ssh"
+                ]
+            },
+            {
+                command: "ls -la /home/admin/.ssh/",
+                output: [
+                    "total 16",
+                    "drwx------. 2 admin admin 4096 Jan 15 10:30 .",
+                    "drwx------. 3 admin admin 4096 Aug 14 14:20 ..",
+                    "-rw-------. 1 admin admin  398 Jan 15 10:30 authorized_keys",
+                    "-rw-------. 1 admin admin 1679 Jan 15 10:30 id_rsa",
+                    "-rw-r--r--. 1 admin admin  398 Jan 15 10:30 id_rsa.pub"
+                ]
+            },
+            {
+                command: "cat /home/admin/.ssh/authorized_keys",
+                output: [
+                    "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC7vbqajDjZl1p0+5H9Qr6yFUvW8fJ2dJ5ZlF4pJ7TxJ3eKl9W+8RZ8uJ5pK9mN4T5dX6W8tQq5sN2kL8jO6vE7pL2dK9sN4vR7jM8oP6qL9kN3fC6uH8bY4lK1wS5eV9pJ2rT8bN4qL7dK5sO9vP6eL1nQ2fK7wJ4vR9oP5tL8bY1cX6eN4rT7wJ9pL2oQ5vE8mN6kX1bY4sL9wP7vR2oQ8pJ5dK9sN6vL1rT4wJ8oP3fY7eK6vR9sL2oQ8pJ5dK9sN6vL1rT4wJ8oP3fY7eK6vR9s admin@workstation"
+                ]
+            },
+            {
+                command: "echo 'Penetration test completed. Full system access achieved.'",
+                output: [
+                    "Penetration test completed. Full system access achieved."
+                ]
             }
         ];
         
-        // Random system messages
-        function addSystemMessage() {
-            const messages = [
-                '<span class="info">TOR connection established - IP anonymized</span>',
-                '<span class="warning">Tracking attempt detected - Countermeasures activated</span>',
-                '<span class="info">Secure VPN active: Switzerland server</span>',
-                '<span class="success">Firewall bypassed successfully</span>',
-                '<span class="info">Network traffic monitoring: ' + Math.floor(Math.random() * 1000) + ' MB/s</span>',
-                '<span class="warning">Alarm system disabled</span>',
-                '<span class="info">Data backup completed: ' + randomHash().substring(0, 8) + '.enc</span>',
-                '<span class="success">Root access obtained on remote server</span>',
-                '<span class="info">Vulnerability scan completed: 23 critical issues found</span>',
-                '<span class="warning">Stealth mode activated</span>'
-            ];
-            
-            addLine(messages[Math.floor(Math.random() * messages.length)]);
+        function updatePrompt(newPrompt) {
+            const lines = terminal.querySelectorAll('.terminal-line');
+            const lastLine = lines[lines.length - 1];
+            lastLine.innerHTML = `<span class="info">${newPrompt}</span><span class="cursor"> </span>`;
         }
         
-        // Start sequences
-        let sequenceIndex = 0;
-        function runNextSequence() {
-            if (sequenceIndex < hackingSequences.length) {
-                hackingSequences[sequenceIndex]();
-                sequenceIndex++;
-            } else {
-                sequenceIndex = 0;
+        function typeText(text, className = '', delay = 30) {
+            return new Promise((resolve) => {
+                let i = 0;
+                const cursor = terminal.querySelector('.cursor');
+                const currentLine = cursor.parentElement;
+                
+                function typeChar() {
+                    if (i < text.length) {
+                        const char = text[i];
+                        const span = document.createElement('span');
+                        span.textContent = char;
+                        if (className) span.className = className;
+                        currentLine.insertBefore(span, cursor);
+                        i++;
+                        setTimeout(typeChar, delay + Math.random() * 20);
+                    } else {
+                        resolve();
+                    }
+                }
+                typeChar();
+            });
+        }
+        
+        function addOutput(lines, className = '') {
+            const cursor = terminal.querySelector('.cursor');
+            const currentLine = cursor.parentElement;
+            cursor.remove();
+            
+            lines.forEach((line, index) => {
+                const div = document.createElement('div');
+                div.className = 'terminal-line';
+                if (className) div.classList.add(className);
+                div.textContent = line;
+                terminal.appendChild(div);
+            });
+        }
+        
+        function addNewPrompt(prompt = "┌──(root💀kali)-[~/pentest]\n└─$ ") {
+            const div = document.createElement('div');
+            div.className = 'terminal-line';
+            div.innerHTML = `<span class="info">${prompt}</span><span class="cursor"> </span>`;
+            terminal.appendChild(div);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+        
+        async function executeStep() {
+            if (currentStep >= hackingSequence.length) {
+                return;
             }
             
-            // Next sequence after 15-25 seconds
-            setTimeout(runNextSequence, Math.random() * 10000 + 15000);
+            isTyping = true;
+            const step = hackingSequence[currentStep];
+            
+            // Type the command
+            await typeText(step.command);
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Remove cursor and add output
+            const cursor = terminal.querySelector('.cursor');
+            cursor.remove();
+            
+            // Add output with appropriate styling
+            step.output.forEach(line => {
+                const div = document.createElement('div');
+                div.className = 'terminal-line';
+                
+                // Apply styling based on content
+                if (line.includes('ERROR') || line.includes('failed') || line.includes('denied')) {
+                    div.classList.add('error');
+                } else if (line.includes('SUCCESS') || line.includes('found') || line.includes('open') || line.includes('root') || line.includes('ACHIEVED')) {
+                    div.classList.add('success');
+                } else if (line.includes('WARNING') || line.includes('[Warning]')) {
+                    div.classList.add('warning');
+                } else if (line.startsWith('[') || line.includes('Hydra') || line.includes('Nmap')) {
+                    div.classList.add('info');
+                }
+                
+                div.textContent = line;
+                terminal.appendChild(div);
+            });
+            
+            terminal.scrollTop = terminal.scrollHeight;
+            
+            currentStep++;
+            
+            // Update prompt based on the step
+            let newPrompt = "┌──(root💀kali)-[~/pentest]\n└─$ ";
+            if (currentStep >= 5 && currentStep < 9) {
+                newPrompt = "[admin@webserver ~]$ ";
+            } else if (currentStep >= 9) {
+                newPrompt = "[root@webserver admin]# ";
+            }
+            
+            // Add new prompt
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            addNewPrompt(newPrompt);
+            
+            isTyping = false;
         }
         
-        // System messages every 3-8 seconds
-        function systemMessages() {
-            addSystemMessage();
-            setTimeout(systemMessages, Math.random() * 5000 + 3000);
+        // Auto-execute the hacking sequence
+        async function runAutoHack() {
+            while (currentStep < hackingSequence.length) {
+                await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 3000));
+                if (!isTyping) {
+                    await executeStep();
+                }
+            }
         }
         
-        // Start everything after 3 seconds
-        setTimeout(() => {
-            runNextSequence();
-            systemMessages();
-        }, 3000);
+        // Start the auto-hacking sequence after a short delay
+        setTimeout(runAutoHack, 2000);
         
-        // Typing effect for cursor
-        setTimeout(() => {
-            addLine('<span class="success">All systems operational</span>');
-            setTimeout(() => addLine('<span class="success">Secure connection established</span>'), 1000);
-            setTimeout(() => addLine('<span class="info">Penetration testing mode activated</span>'), 2000);
-        }, 2000);
+        // Add some matrix-like background effect
+        function createMatrixEffect() {
+            const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!@#$%^&*()';
+            const matrixBg = document.createElement('div');
+            matrixBg.className = 'matrix-bg';
+            document.body.appendChild(matrixBg);
+            
+            for (let i = 0; i < 50; i++) {
+                const span = document.createElement('span');
+                span.style.position = 'absolute';
+                span.style.left = Math.random() * 100 + 'vw';
+                span.style.top = Math.random() * 100 + 'vh';
+                span.style.color = 'rgba(0, 255, 0, 0.1)';
+                span.style.fontSize = '10px';
+                span.style.animation = `matrix-fall ${5 + Math.random() * 10}s linear infinite`;
+                span.textContent = chars[Math.floor(Math.random() * chars.length)];
+                matrixBg.appendChild(span);
+            }
+        }
+        
+        // Add CSS for matrix effect
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes matrix-fall {
+                0% { transform: translateY(-100vh); opacity: 0; }
+                10% { opacity: 1; }
+                90% { opacity: 1; }
+                100% { transform: translateY(100vh); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        createMatrixEffect();
     </script>
 </body>
 </html>
