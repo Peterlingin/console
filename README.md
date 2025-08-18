@@ -78,13 +78,13 @@ The terminal behaves exactly like a real AS/400 system would, complete with prop
 
 ---
 
-**The Bologna Tortellini Threat Assessment Map**
+**Hollywood Hacking Tropes Exposed**
 
-The Bologna Tortellini Threat Assessment Map helps tortellini lovers in Bologna resist the urge to grab a plate (or five). These delicious little calorie bombs are loaded with fat—and serious belly risk.
+The screen is a blur of neon green text on a black background, reminiscent of the 1990s. The hacker's fingers fly across the keyboard, a flurry of rapid-fire keystrokes. This is a fantastic example of Hollywood "hacking" that perfectly captures all the classic tropes! 
 
-The map even highlights “de-tortellinized” zones where you're safe from temptation.
+Every good movie hacker scene starts with the intimidating "RESTRICTED ACCESS" screen with scary warnings.
 
-Just for laughs, of course—tortellini are amazing. No judgment.
+An interactive fake movie hacker experience that recreates those classic over-the-top authentication scenes. But here’s the twist: only one username and password combo actually works!
 
 ---
 
