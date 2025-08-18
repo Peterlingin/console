@@ -41,11 +41,17 @@ It runs on dummy data but feels surprisingly real, with just enough action to ke
 
 **The Hacker Terminal**
 
-The Hacker Terminal is a first stab at recreating those flashy “hacking scenes” everyone loves in movies—and yes, your coworkers too. It’s all fake, just a bunch of dummy stuff. Nothing real, nothing dangerous.
+The Hacker Terminal is a first stab at recreating those flashy “hacking scenes” everyone loves in movies—and yes, your coworkers too. The sequence automatically plays out a complete penetration test scenario, demonstrating a realistic attack path that security professionals might encounter during authorized testing. It's purely educational and shows how attackers might chain together vulnerabilities to compromise systems.
 
-The sequence automatically plays out a complete penetration test scenario, demonstrating a realistic attack path that security professionals might encounter during authorized testing. It's purely educational and shows how attackers might chain together vulnerabilities to compromise systems.
+Visual Features:
+- Authentic terminal window with controls
+- Green-on-black hacker aesthetic
+- Typing animation that mimics real typing
+- Blinking cursor
+- Status bar with network information
+- Subtle visual effects for immersion
 
-Still, it looks cool. Like the other fake consoles shared here, it’s perfect for running in a browser kiosk-mode on a second monitor at the office. Great for impressing visitors—especially the clueless ones.
+It’s all fake, just a bunch of dummy stuff. Nothing real, nothing dangerous. Still, it looks cool. Like the other fake consoles shared here, it’s perfect for running in a browser kiosk-mode on a second monitor at the office. Great for impressing visitors—especially the clueless ones.
 
 ---
 
