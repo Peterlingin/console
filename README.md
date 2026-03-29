@@ -1,5 +1,5 @@
 # console
-A project full of fake, pointless consoles—packed into a single HTML file. No real use. Just for fun.
+A project full of fake, pointless consoles, packed into a single HTML file. No real use. Just for fun.
 
 You can check out the full website for this project at:
 👉 https://peterlingin.github.io/console/
