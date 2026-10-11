@@ -94,5 +94,15 @@ A "professional" cybersecurity phrase generator that mimics the style of big-nam
 
 The page is completely self-contained and can be saved as an HTML file to use offline. Just click "Generate Insight" to produce a new phrase with a smooth fade animation. Perfect for any cybersecurity conference or presentation where you need to sound strategic without committing to anything specific!
 
+---
+
+**Workout Timers**
+
+The gym folder contains two self-contained workout timers for your home network, plus a simple menu page. No build step or external dependencies required. English interface.
+
+Use it to get some exercise and get in great shape for your next vacation!
+
+
+
 
 
