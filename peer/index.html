@@ -21,7 +21,9 @@ p{margin:0 0 16px}.dim{color:var(--dim)}
 label{display:block;margin:20px 0 6px;color:var(--hi)}
 textarea,button{font:inherit;color:var(--txt)}
 textarea{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:2px;padding:10px;resize:vertical;font:12px/1.4 var(--mono);min-height:84px;word-break:break-all}
-textarea:focus,button:focus-visible{outline:1px solid var(--dim);outline-offset:1px}
+textarea:focus,input:focus,button:focus-visible{outline:1px solid var(--dim);outline-offset:1px}
+input{flex:1;min-width:200px;background:var(--panel);border:1px solid var(--line);border-radius:2px;padding:8px 10px;font:13px var(--mono);color:var(--txt)}
+.note{font-size:12px;color:var(--dim)}
 button{background:var(--panel);border:1px solid var(--line);border-radius:2px;padding:7px 14px;cursor:pointer}
 button:hover{background:#d3d7da;border-color:var(--dim)}
 button:disabled{opacity:.45;cursor:default}
@@ -54,6 +56,9 @@ a{color:var(--hi)}
 <main id="setup">
 <h1>Establish a channel</h1>
 <p class="dim">Direct browser-to-browser link, encrypted end to end. No server relays or stores anything; closing the tab ends the session.</p>
+<label for="pp">Shared passphrase</label>
+<div class="row" style="margin-top:0"><input id="pp" type="password" autocomplete="off" spellcheck="false" placeholder="Agreed in advance, at least 12 characters"><button id="ppShow">Show</button><button id="ppGen">Generate</button></div>
+<p class="note">Agree on it by voice or in person, never over the channel that carries the codes. Both sides enter the same one. It encrypts the handshake codes, so anyone who reads them can neither inspect nor answer them.</p>
 <div class="row"><button id="bHost">Start session</button><button id="bJoin">Join session</button></div>
 
 <div id="host" hidden>
@@ -80,7 +85,7 @@ a{color:var(--hi)}
 </main>
 
 <main id="chat" hidden>
-<div id="vf">Verification code <code id="vc"></code> Confirm it matches your peer's by voice or another channel before sharing sensitive data.</div>
+<div id="vf">Verification code <code id="vc"></code> The handshake was protected by the shared passphrase. Compare this code with your peer by voice as a final check before sharing sensitive data.</div>
 <div id="feed"></div>
 <div id="bar">
 <textarea id="inp" placeholder="Message. Enter to send, Shift+Enter for a new line. Use ``` for code blocks." spellcheck="false"></textarea>
@@ -102,15 +107,44 @@ let pc,dc,rx=null,live=false,log=[],vcode="";
 function status(t,c){const s=$("st");s.className=c||"";s.lastChild.textContent=t}
 function err(m){$("err").textContent=m||""}
 
-/* ---------- code encoding (deflate + base64url) ---------- */
+/* ---------- passphrase ---------- */
+let sessPw="";
+const pass=()=>$("pp").value.normalize("NFKC").replace(/[\s-]+/g,"").toUpperCase();
+function ppOk(){if(sessPw||pass().length>=12)return true;err("Enter the shared passphrase (at least 12 characters), or use Generate.");return false}
+$("ppShow").onclick=()=>{const i=$("pp"),s=i.type==="password";i.type=s?"text":"password";$("ppShow").textContent=s?"Hide":"Show"};
+$("ppGen").onclick=()=>{
+  const A="ABCDEFGHJKMNPQRSTUVWXYZ23456789";let o="";
+  while(o.length<16){for(const x of crypto.getRandomValues(new Uint8Array(32))){if(x<248&&o.length<16)o+=A[x%31]}}
+  const i=$("pp");i.value=o.match(/.{4}/g).join("-");i.type="text";$("ppShow").textContent="Hide";
+};
+
+/* ---------- code encoding (deflate + passphrase encryption + base64url) ---------- */
 const b64=u=>{let s="";u.forEach(c=>s+=String.fromCharCode(c));return btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"")};
 const unb64=s=>Uint8Array.from(atob(s.replace(/-/g,"+").replace(/_/g,"/")),c=>c.charCodeAt(0));
 async function run(data,S){const st=new Blob([data]).stream().pipeThrough(new S("deflate-raw"));return new Uint8Array(await new Response(st).arrayBuffer())}
-async function encode(d){return "pc1."+b64(await run(new TextEncoder().encode(JSON.stringify({type:d.type,sdp:d.sdp})),CompressionStream))}
-async function decode(s){
+const te=new TextEncoder();
+async function dkey(pw,salt){
+  const m=await crypto.subtle.importKey("raw",te.encode(pw),"PBKDF2",false,["deriveKey"]);
+  return crypto.subtle.deriveKey({name:"PBKDF2",salt,iterations:600000,hash:"SHA-256"},m,{name:"AES-GCM",length:256},false,["encrypt","decrypt"]);
+}
+async function encode(d,role){
+  const pw=sessPw||pass(),salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12));
+  const pt=await run(te.encode(JSON.stringify({type:d.type,sdp:d.sdp})),CompressionStream);
+  const ct=new Uint8Array(await crypto.subtle.encrypt({name:"AES-GCM",iv,additionalData:te.encode(role)},await dkey(pw,salt),pt));
+  const o=new Uint8Array(28+ct.length);o.set(salt);o.set(iv,16);o.set(ct,28);
+  sessPw=pw;return "pc2."+b64(o);
+}
+async function decode(s,role){
   s=s.replace(/\s+/g,"");
-  if(!s.startsWith("pc1."))throw new Error("Not a valid code.");
-  return JSON.parse(new TextDecoder().decode(await run(unb64(s.slice(4)),DecompressionStream)));
+  if(!s.startsWith("pc2."))throw new Error("Not a valid code.");
+  let u;try{u=unb64(s.slice(4))}catch(_){throw new Error("Not a valid code.")}
+  if(u.length<45)throw new Error("Not a valid code.");
+  const pw=sessPw||pass();let pt;
+  try{pt=new Uint8Array(await crypto.subtle.decrypt({name:"AES-GCM",iv:u.slice(16,28),additionalData:te.encode(role)},await dkey(pw,u.slice(0,16)),u.slice(28)))}
+  catch(_){throw new Error("Cannot decrypt: wrong passphrase, wrong code type, or the code was altered.")}
+  const d=JSON.parse(new TextDecoder().decode(await run(pt,DecompressionStream)));
+  if(d.type!==role)throw new Error("Unexpected code type.");
+  sessPw=pw;return d;
 }
 
 /* ---------- connection ---------- */
@@ -130,27 +164,27 @@ const gather=()=>new Promise(r=>{
 });
 async function publish(id){
   await gather();
-  $(id).value=await encode(pc.localDescription);
+  $(id).value=await encode(pc.localDescription,id);
 }
 function wire(ch){
   dc=ch;dc.binaryType="arraybuffer";dc.bufferedAmountLowThreshold=1<<18;
   dc.onopen=opened;dc.onclose=()=>{if(live)closed()};dc.onmessage=e=>recv(e.data);
 }
 $("bHost").onclick=async()=>{
-  err();$("host").hidden=false;$("join").hidden=true;$("bHost").disabled=$("bJoin").disabled=true;
+  err();if(!ppOk())return;$("host").hidden=false;$("join").hidden=true;$("bHost").disabled=$("bJoin").disabled=true;
   try{mk();wire(pc.createDataChannel("chat"));await pc.setLocalDescription(await pc.createOffer());await publish("offer");}
   catch(e){err("Could not create session: "+e.message)}
 };
-$("bJoin").onclick=()=>{err();$("join").hidden=false;$("host").hidden=true;$("bHost").disabled=$("bJoin").disabled=true};
+$("bJoin").onclick=()=>{err();if(!ppOk())return;$("join").hidden=false;$("host").hidden=true;$("bHost").disabled=$("bJoin").disabled=true};
 $("bConnect").onclick=async()=>{
   err();
-  try{await pc.setRemoteDescription(await decode($("ansIn").value));status("Connecting…");}
+  try{await pc.setRemoteDescription(await decode($("ansIn").value,"answer"));status("Connecting…");}
   catch(e){err(e.message)}
 };
 $("bAnswer").onclick=async()=>{
   err();
   try{
-    const d=await decode($("offIn").value);
+    const d=await decode($("offIn").value,"offer");
     mk();pc.ondatachannel=e=>wire(e.channel);
     await pc.setRemoteDescription(d);
     await pc.setLocalDescription(await pc.createAnswer());
@@ -165,7 +199,7 @@ document.querySelectorAll(".cp").forEach(b=>b.onclick=async()=>{
 });
 document.querySelectorAll(".qb").forEach(b=>b.onclick=()=>{
   const v=$(b.dataset.t).value,box=$("q-"+b.dataset.t);
-  if(!v.startsWith("pc1.")){return}
+  if(!v.startsWith("pc2.")){return}
   try{const q=qrcode(0,"L");q.addData(v);q.make();box.innerHTML='<div class="qr">'+q.createSvgTag({cellSize:4,margin:2,scalable:true})+'</div>'}
   catch(e){box.textContent="Code too large for a QR image. Use Copy."}
 });
@@ -185,7 +219,7 @@ async function opened(){
   live=true;vcode=await verify();
   $("vc").textContent=vcode;
   $("setup").hidden=true;$("chat").hidden=false;
-  status("Connected","ok");sys("Channel open. Verify the code above with your peer.");
+  status("Connected","ok");sys("Channel open. The handshake was authenticated by the shared passphrase; compare the verification code as a final check.");
   $("inp").focus();
 }
 function closed(){
@@ -270,4 +304,3 @@ if(!window.RTCPeerConnection||!window.CompressionStream)err("This browser lacks 
 </script>
 </body>
 </html>
-
