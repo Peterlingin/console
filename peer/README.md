@@ -14,7 +14,7 @@ Built for short-lived exchanges of technical information between two people, suc
 - Timestamped transcript export
 - One self-contained HTML file, with no external dependencies or build step
 
-## Quick start
+## Quick start (GitHub)
 
 1. Put `index.html` in a repository.
 2. Open **Settings → Pages**, set **Source** to *Deploy from a branch*, choose `main` and `/ (root)`, and save.
@@ -116,4 +116,4 @@ Provided as is, without warranty. Use it only for lawful and authorized purposes
 
 ## License
 
-[Choose a license before publishing, e.g. MIT.]
+MIT
