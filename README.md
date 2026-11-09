@@ -1,5 +1,5 @@
 # console
-A project full of fake, pointless consoles, packed into a single HTML file. No real use. Just for fun.
+A project full of fake, pointless consoles, packed into a single HTML file. No real use. Just for fun. It also includes some applications that can be useful.
 
 You can check out the full website for this project at:
 👉 https://peterlingin.github.io/console/
@@ -102,7 +102,12 @@ The gym folder contains two self-contained workout timers for your home network,
 
 Use it to get some exercise and get in great shape for your next vacation!
 
+---
 
+**Peer Channel**
 
+A minimal, single-file text chat that links two browsers directly. Messages and files travel peer to peer over an encrypted WebRTC connection. There is no backend, no account, and no server that relays or stores anything. Closing the tab ends the session.
+
+Built for short-lived exchanges of technical information between two people, such as findings, commands, snippets and small files.
 
 
