@@ -116,4 +116,4 @@ Provided as is, without warranty. Use it only for lawful and authorized purposes
 
 ## License
 
-MIT
+MIT. See the `LICENSE` file.
